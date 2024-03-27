@@ -1,2 +1,2 @@
 # system design
-revisite the basics of sys design
+revisit the basics of sys design
