@@ -36,7 +36,7 @@
                     }
                 ```
 
-    - feature: user should know how things work in the background
+    - feature: user should not know how things work in the background
         * client (user app) on the app store
         * client talks to client-facing APIs
         * client-facing API talks to server-facing API
@@ -67,13 +67,26 @@
         * `GET` request to, say, `watch/` endpoint. `getVideoFrame` function w. params `videoID`, `device` and `offset`. response is a `Frame` object (the vid or a part of it)
 * customers can comment on a video
     - assume `REST`
-        * `POST` request to, say, `{videoID}/comment/` endpoint. `comment` function w. params `userID`, `videoID`, `comment`. response is a `Comment` object and success message
+        * `POST` request to, say, `{videoID}/comment/` endpoint. `createComment` function w. params `userID`, `videoID`, `comment`. response is a `Comment` object and success message
 *  customers require these videos on demand
     - we must store them somewhere (a DB, of course)
     - what kind of DB do we need?
         * we will store `Frame`, `Comment` objects etc
         * comments are easy: a SQL db which has a `comments` table that has the following columns: `id`, `comment`, `userID` (FK), `videoID` (FK)
         * this means that there are `users` and `videos` tables
+    - what network protocol(s) do we need?
+        * depends on what we are looking at
+        * video frames, for example, require continuous updates (many request-response cycles). request contains the user's ID, and the frame requested: `Frame(id, ctx, next)`, for example. use webRTC w. TCP because order (in this case `ctx`) matters
+        * video frame server(s) will, almost certainly, be stateful; be aware
+        * comments are not as resource-intensive as video frames, therefore, HTTP w. UDP or TCP works
+        * comment server(s) will, almost certainly, be configured to be stateless, therefore, the network protocols chosen must be compatible with the server config
+    - how do we talk to the server?
+        * many DB solutions, e.g. MySQL, Cassandra, Amazon Dynamo DB and PostgreSQL, define how the client must communicate w. DB; this includes the network protocol to use
+        * Elasticsearch, for example, implements HTTP
+    - which DB solution(s) do we implement?
+        * depends; each has trade-offs
+        * SQL-like DBs would be quite expensive from a resources (bandwidth, etc) perspective
+        * the coice of DB is also affected by the data you have, e.g. HDFS and S3 are great file systems for videos. alternatively, you can use [vimeo][def2]
 
     ```mermaid
         graph LR;
@@ -85,5 +98,7 @@
         B[client-facing API] --> A[customers]
     ```
 
-* custo
+
+* customers
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
+[def2]: https://vimeo.com/
