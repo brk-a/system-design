@@ -86,7 +86,7 @@
     - which DB solution(s) do we implement?
         * depends; each has trade-offs
         * SQL-like DBs would be quite expensive from a resources (bandwidth, etc) perspective
-        * the coice of DB is also affected by the data you have, e.g. HDFS and S3 are great file systems for videos. alternatively, you can use [vimeo][def2]
+        * the choice of DB is also affected by the data you have, e.g. HDFS and S3 are great file systems for videos. alternatively, you can use [vimeo][def2]
 
     ```mermaid
         graph LR;
@@ -99,6 +99,39 @@
     ```
 
 
-* customers
+* customers need to create live streams of their content
+    - have an expensive (high bandwidth, etc), reliable protocol, say, RTMP to capture the video (raw data) and store it in the db
+    - recall: customers have different devices, therefore, different resolution capabilities. there has to be a way to make a, say, 8K video viewable in 144p
+    - we need a transformation service to, well, transform a video into the desired resolution
+        * how does such a service work?
+        * glad you asked...
+            1. break the input video into, say, 10-second snips/segments
+            2. pass the snips into a coversion function as an arg e.g. `convert("snip-0123-abc.xy", 144)`converts *snip-0123-abc.xy* to 144p
+        * this method has a name: *map-reduce*; break input into small problems, solve them and return each solution (funny because no *reduce* actually takes place)
+
+            ```mermaid
+            graph LR
+            A[video] --> B[snip 1]
+            A --> C[snip 2]
+            A --> |...| D[snip N]
+            B --> E[server 1 converts to 1440p]
+            C --> F[server 2 converts to 720p]
+            D --> |...| G[server N converts to X res]
+            B --> F
+            B --> G
+            C --> E
+            C --> G
+            D --> E
+            D --> F
+            E --> H[server N compresses 1440p]
+            F --> I[server N-1 compresses 720p]
+            G --> |...| J[server 1 compresses X res]
+            H --> K[1440p, compressed]
+            I --> L[720p, , compressed]
+            J --> |...| M[X res, , compressed]
+            ```
+
+        * //
+
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
 [def2]: https://vimeo.com/
