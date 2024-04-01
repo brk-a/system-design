@@ -61,7 +61,7 @@
     - perform a run using regular and edge cases; emphasis on the latter
         * do not forget capacity estimation
     - repeat steps 1 to 5 until all tests pass
-### example
+### example: a high-level appproach to a live-streaming app
 * customers can use any device to access videos
     - assume `REST`
         * `GET` request to, say, `watch/` endpoint. `getVideoFrame` function w. params `videoID`, `device` and `offset`. response is a `Frame` object (the vid or a part of it)
@@ -116,7 +116,7 @@
             A --> |...| D[snip N]
             B --> E[server 1 converts to 1440p]
             C --> F[server 2 converts to 720p]
-            D --> |...| G[server N converts to X res]
+            D --> G[server N converts to X res]
             B --> F
             B --> G
             C --> E
@@ -125,13 +125,36 @@
             D --> F
             E --> H[server N compresses 1440p]
             F --> I[server N-1 compresses 720p]
-            G --> |...| J[server 1 compresses X res]
+            G --> J[server 1 compresses X res]
             H --> K[1440p, compressed]
-            I --> L[720p, , compressed]
-            J --> |...| M[X res, , compressed]
+            I --> L[720p, compressed]
+            J --> M[X res, compressed]
             ```
 
-        * //
+* customers need to get the video they ask for
+    - how do we get a video from the server to the client?
+        * network protocols; network protocols everywhere...
+        * webRTC is great for P2P ops e.g. zoom calls
+        * MPEG-DASH is great for livestreaming. also, the client can receive said video at whatever resolution his/er device is capable of
+        * HLS is, in a way, MPEG-DASH for MacOS and iOS
+    - what kind of data do you want to store on the server?
+        * do you want to store any data at all?
+        * how about the state/statelessness? state*ful* for state*less*?
+        * do you need CDNs, caches etc?
+        * etc
+### example: a low-level appproach to a live-streaming app
+* the only thing a customer care about is this: watch the video I request when I request for it
+    - the problems to solve, from a sys design perspective, are:
+        1. have a way to request a video
+        2. have a way to fetch a video
+        3. do this in as little time as possible
+    - two approaches:
+        1. get directly into the code at the start (objects required in the system from a OOP perspective etc)
+        2. ask the following: what actions can a user perform? (drag the seek bar to a particular time stamp or press the play button when the video loads, press the pause button etc)
+    - emphasis on the second approach
+    - idea, from an engineering perspective, is to optimise memory and API calls taking into account user behaviour
+        * concurrency, throughput, latency, chunking, caching etc
+    - 
 
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
 [def2]: https://vimeo.com/
