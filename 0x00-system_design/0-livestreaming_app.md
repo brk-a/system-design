@@ -155,6 +155,24 @@
     - idea, from an engineering perspective, is to optimise memory and API calls taking into account user behaviour
         * concurrency, throughput, latency, chunking, caching etc
     - 
+* use-case diagram allows us to understand how the system will work by immersing us into the system
+    - emphasis on what the customer wants
+    - customer's wants/needs are use cases
+        * view video @ max quality allowed by network
+        * play a video starting at the timestamp a customer selects
+        * play a video starting at the timestamp a customer stopped at
+        * non-stop play when watching videos
+    - convert the use cases into data types: objects, classes etc
+        * `Frame` object for videos
+        * `Comment` object for comments
+        * etc
+    - link each use case w. relevant APIs on the use-case diagram
+        * view video @ max quality allowed by network &rarr; use `HTTP-DASH` to communicate w. video-consuming service
+        * play a video starting at the timestamp a customer selects &rarr; function `play(userID, videoID, timeStamp)` that returns a `Frame` object that contains timestamp `timeStamp`
+        * play a video starting at the timestamp a customer stopped at &rarr; function `seek(userID, videoID)` that returns a `Frame` object
+        * non-stop play when watching videos &rarr; function `getVideoFrame(userID, videoID, next)` that returns a `Frame` object that contains timestamp `next`
+    - remove redundant APIs
+        * are `play` and `getVideoFrame` similar? do we need both? can we use one to fulfil both use-cases
 
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
 [def2]: https://vimeo.com/
