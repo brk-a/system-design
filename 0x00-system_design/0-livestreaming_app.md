@@ -173,6 +173,37 @@
         * non-stop play when watching videos &rarr; function `getVideoFrame(userID, videoID, next)` that returns a `Frame` object that contains timestamp `next`
     - remove redundant APIs
         * are `play` and `getVideoFrame` similar? do we need both? can we use one to fulfil both use-cases
+* assume we use the OOP approach; we need a class diagram
+    * class diagram shows the classes/objects
+    * these are made from use-cases
+    * you record *states* and *behaviours* of every class
+    * states &rarr; data required by an object to perform behaviours
+    * behavoiurs &rarr; what the object does (observable actions of an object/class)
+
+    ```mermaid
+    classDiagram
+    Video
+    Video :+String Id
+    Video :+Object Frames[]
+    Video :+Object Metadata
+    Video :+getFrame()
+    User
+    User :+String Id
+    User :+String Name
+    User :+String Email
+    User :+getID()
+    WatchedVideo
+    WatchedVideo :+String Id
+    WatchedVideo :+String VideoId
+    WatchedVideo :+String UserId
+    WatchedVideo :+Object SeekTimestamp
+    WatchedVideo :+getID()
+    VideoConsumingService
+    VideoConsumingService :+WatchedVideo[] watchedVideos
+    VideoConsumingService :+getVideoFrame(userID, videoID, next)
+    VideoConsumingService :+seek(userID, videoID)
+    ```
+
 
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
 [def2]: https://vimeo.com/
