@@ -210,11 +210,12 @@
 
     ```mermaid
     sequenceDiagram
-    participant User
-    participant VideoConsumingService
-    participant VideoService
+    create participant User
+    create participant VideoConsumingService
+    create participant VideoService
     User->>-VideoConsumingService: seek(userID, videoID)
     VideoConsumingService-->-User: auth + DateTime timestamp
+    destroy VideoConsumingService
     User-->+VideoService: getVideoFrame(userID, videoID, next) where next=timestamp+offset
     VideoService-->+User: Frame videoFrame
     User-->+VideoService: getVideoFrame(userID, videoID, next)
