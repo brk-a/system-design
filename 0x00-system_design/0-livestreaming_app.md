@@ -210,6 +210,9 @@
 
     ```mermaid
     sequenceDiagram
+    participant User
+    participant VideoConsumingService
+    participant VideoService
     User->>-VideoConsumingService: seek(userID, videoID)
     VideoConsumingService-->-User: auth + DateTime timestamp
     User-->+VideoService: getVideoFrame(userID, videoID, next) where next=timestamp+offset
@@ -220,6 +223,9 @@
     VideoService-->+User: Frame videoFrame
     ```
 
+* last step: code the server
+    - see [0-livestreaming_app.java][def3]
 
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
 [def2]: https://vimeo.com/
+[def3]: 0-livestreaming_app.java
