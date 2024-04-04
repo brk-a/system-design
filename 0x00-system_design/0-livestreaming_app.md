@@ -204,6 +204,22 @@
     VideoConsumingService :+seek(userID, videoID)
     ```
 
+* we need a sequence diagram
+    * sequance diagram shows, well, the *sequence* of actions the user takes to perform an action
+    * 
+
+    ```mermaid
+    sequenceDiagram
+    User->>-VideoConsumingService: seek(userID, videoID)
+    VideoConsumingService-->-User: auth + DateTime timestamp
+    User-->+VideoService: getVideoFrame(userID, videoID, next) where next=timestamp+offset
+    VideoService-->+User: Frame videoFrame
+    User-->+VideoService: getVideoFrame(userID, videoID, next)
+    VideoService-->+User: Frame videoFrame
+    User-->+VideoService: getVideoFrame(userID, videoID, next)
+    VideoService-->+User: Frame videoFrame
+    ```
+
 
 [def]: https://www.geeksforgeeks.org/fault-tolerance-in-distributed-system/
 [def2]: https://vimeo.com/
