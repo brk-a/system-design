@@ -22,6 +22,7 @@
 
     ```mermaid
     erDiagram
+    title: profile service: ERD
         USER ||--|| PROFILE : has
         PROFILE {
             string Id
@@ -46,6 +47,7 @@
 
     ```mermaid
         flowchart LR
+        title profile service: sign up/in
         A[user]--username&token-->B[profile service]
         B--store-->C[(DB)]
         B-.may use.->D[email service]
@@ -55,6 +57,7 @@
 
     ```mermaid
         flowchart LR
+        title profile service: monolithic flow
         A[user]--1 username&token-->B[profile service]
         A--2 upload images-->B
         B--3a store-->C[(DB)]
@@ -62,17 +65,56 @@
         B--4 response-->A
     ```
 
-* profile service: upload images (monolithic)
+* profile service: upload images (microservice)
 
     ```mermaid
         flowchart LR
+        title profile service: upload images, microservice flow
         A[user]--1 username&token-->B[gateway service]
         B--2 authenticated?-->C[profile service]
-        C--3a Yes/No-->B
-        B--4 Yes, direct to upload service-->D[image service]
-        D--5 store-->E[(DB)]
+        C--3 Y/N-->B
+        B--3a Yes, direct to upload service-->D[image service]
+        D--4 store-->E[(DB)]
         B-.3b No, drop.->F[dropped]
-        B--6 response-->A
+        B--5 response-->A
         B-.->G[(DB)]
         D-.->H[DFS]
     ```
+
+### DMs
+* client A wants to talk to client B
+    1. A tells gateway that it wants to talk to B using XMPP
+        - username & token (auth)
+        - A's id (id from)
+        - B's id (id to)
+        - message (payload)
+    2. gateway uses XMPP to push message to B
+* A, gateway and B connect using web-socket, TCP etc
+    - gateway may maintain sessions (connection IDs, etc), however, this is inefficient
+    - use a sessions service instead
+
+    ```mermaid
+        flowchart LR
+        title sessions service: send a message, microservice flow
+        A[user A]--1 auth, idFrom, idTo, payload-->B[gateway service]
+        B--2 authenticated?-->C[profile service]
+        C--3 Y/N-->B
+        B-->D[image service]
+        D-->E[(DB)]
+        B--7 response-->A
+        B-.->G[(DB)]
+        D-.->H[DFS]
+        B--3a Yes-->I[sessions service]
+        B-.3b No, drop.->J[drop]
+        J-.->K[dropped]
+        I--4 idTo? session? etc-->L[(DB)]
+        L--4a alright, send payload-->I
+        L-.4b No, drop.->M[dropped]
+        I--5 alright, send payload-->B
+        B--6 payload-->N[user B]
+        C-.->O[(DB)]
+    ```
+
+### noting matches
+* matching algo
+### recommending matches
