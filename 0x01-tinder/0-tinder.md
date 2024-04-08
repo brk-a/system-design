@@ -22,7 +22,6 @@
 
     ```mermaid
     erDiagram
-    title: profile service: ERD
         USER ||--|| PROFILE : has
         PROFILE {
             string Id
@@ -47,7 +46,6 @@
 
     ```mermaid
         flowchart LR
-        title profile service: sign up/in
         A[user]--username&token-->B[profile service]
         B--store-->C[(DB)]
         B-.may use.->D[email service]
@@ -57,7 +55,6 @@
 
     ```mermaid
         flowchart LR
-        title profile service: monolithic flow
         A[user]--1 username&token-->B[profile service]
         A--2 upload images-->B
         B--3a store-->C[(DB)]
@@ -69,7 +66,6 @@
 
     ```mermaid
         flowchart LR
-        title profile service: upload images, microservice flow
         A[user]--1 username&token-->B[gateway service]
         B--2 authenticated?-->C[profile service]
         C--3 Y/N-->B
@@ -95,7 +91,6 @@
 
     ```mermaid
         flowchart LR
-        title sessions service: send a message, microservice flow
         A[user A]--1 auth, idFrom, idTo, payload-->B[gateway service]
         B--2 authenticated?-->C[profile service]
         C--3 Y/N-->B
