@@ -94,22 +94,51 @@
         A[user A]--1 auth, idFrom, idTo, payload-->B[gateway service]
         B--2 authenticated?-->C[profile service]
         C--3 Y/N-->B
-        B-->D[image service]
+        B-.->D[image service]
         D-->E[(DB)]
         B--7 response-->A
         B-.->G[(DB)]
         D-.->H[DFS]
         B--3a Yes-->I[sessions service]
-        B-.3b No, drop.->J[drop]
-        J-.->K[dropped]
-        I--4 idTo? session? etc-->L[(DB)]
-        L--4a alright, send payload-->I
-        L-.4b No, drop.->M[dropped]
+        B-.3b No, drop.->J[dropped]
+        I--4 idTo? session? etc-->K[(DB)]
+        K--4a alright, send payload-->I
+        K-.4b No, drop.->L[dropped]
         I--5 alright, send payload-->B
-        B--6 payload-->N[user B]
-        C-.->O[(DB)]
+        B--6 payload-->M[user B]
+        C-.->N[(DB)]
     ```
 
 ### noting matches
 * matching algo
+    - may be dinic's or edmond-karp's algo
+* matches will be stored on a server, not the client
+    - server is the single source of truth
+    - client can get data back if app is re-installed on a device or installed in a new device
+* client talks to gateway service. gateway service talks to matcher service. matcher service is connected to a db that has a table containing `userID` (user's/client's id) and `userID` (match); one-to-many r/ship
+* matcher service must talk to sessions service to find out if client is authorised to *talk to* (DM or otherwise contact) the match
+
+     ```mermaid
+        flowchart LR
+        A[user]--1 auth, idFrom, idMatch-->B[gateway service]
+        B--2 authenticated?-->C[profile service]
+        C--3 Y/N-->B
+        B-.->D[image service]
+        D-.->E[(DB)]
+        B--7 response-->A
+        B-.->G[(DB)]
+        D-.->H[DFS]
+        B--3a Yes-->I[matcher service]
+        B-.3b No, drop.->J[dropped]
+        I--4 idMatch? session? etc-->K[sessions service]
+        K--4a alright, talk to match-->I
+        K-.4b No, drop.->L[dropped]
+        I--5 alright, talk to match-->B
+        B--6 talk to match-->M[match]
+        C-.->N[(DB)]
+        K-.->O[(DB)]
+    ```
+
 ### recommending matches
+* recommendation engine
+    - how do we find out who is around where the user is?
