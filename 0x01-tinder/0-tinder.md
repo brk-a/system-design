@@ -1,4 +1,5 @@
 # sys arch and design for tinder
+* a microservices approach to a sys design/arch for tinder
 ### features
 1. storing profiles
     - PII
@@ -129,7 +130,7 @@
         B-.->G[(DB)]
         D-.->H[DFS]
         B--3a Yes-->I[matcher service]
-        B-.3b No, drop.->J[dropped]
+        C-.3b No, drop.->J[dropped]
         I--4 idMatch? session? etc-->K[sessions service]
         K--4a alright, talk to match-->I
         K-.4b No, drop.->L[dropped]
@@ -142,3 +143,39 @@
 ### recommending matches
 * recommendation engine
     - how do we find out who is around where the user is?
+        * the DB of the profile service could store this is a table viz:
+
+        |id|name|hashed_password|sex|location|...|preferences|
+        |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+        |1|A|xgv123byl456|M/F|[lat lon]|...|[preference1, ..., preferenceN]|
+        |...|...|...|...|...|...|...|
+        |M|AM|123xgv456byl|M/F|[lat lon]|...|[preference1, ..., preferenceN]|
+
+    - recommendations are made based on a user's profile (sex, location, preferences etc)
+        * DB, ideally, should be a distributed, NoSQL one e.g. Cassandra, DynamoDB, else, shard (horizontally partition) a relational DB
+        * basis of distribution and/or sharding is the location of the users, that is, a user is in DB X because s/he is in location Y
+        * we can use the rest of the user's attributes to create matches w/i the DB that user is in, that is, filter users in DB that match the user's preferences
+        * location data can be updated at least hourly
+
+    ```mermaid
+        flowchart LR
+        A[user]--1 auth-->B[gateway service]
+        B--2 authenticated?-->C[profile service]
+        C--4a Yes. userProfile-->B
+        B-.->D[image service]
+        D-.->E[(DB)]
+        B--7 response-->A
+        B-.->G[(DB)]
+        D-.->H[DFS]
+        B--5 userProfile-->I[recommendation service]
+        C--4b No, drop-->J[dropped]
+        I-.->K[sessions service]
+        I-->L[(DB)]
+        I--6 recommendations-->B
+        B-.->M[matcher service]
+        M-.->K
+        C--3a find user profile-->N[(DB)]
+        N--3b userProfile-->C
+        K-.->O[(DB)]
+        M-.->P[(DB)]
+    ```
