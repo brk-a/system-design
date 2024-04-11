@@ -44,7 +44,7 @@
     ---
     title: example flow
     ---
-    graphLR
+    flowchart LR
         A[user A]--1 auth, message-->B[gateway service 1]
         C[user B]-->D[gateway service 2]
         E[user X]-->F[gateway service N]
