@@ -28,6 +28,7 @@
     title: message object
     ---
     classDiagram
+    Message : +String Id
     Message : +String fromID
     Message : +String toID
     Message : +String payload
@@ -39,12 +40,26 @@
     Message : +sendReadReceipt()
     ```
 
+    ```mermaid
+    ---
+    title: user object
+    ---
+    classDiagram
+    User : +String Id
+    User : +String email
+    User : +String phoneNumber
+    User : +String location
+    User : +Object profileImage
+    User : +sendMessage()
+    User : +deactivateAccount()
+    ```
 
     ```mermaid
     ---
     title: example flow
     ---
-    flowchart TD
+    flowchart LR
+        L((users))--A&C&E
         A[user A]--1 auth, message-->B[gateway service 1]
         C[user B]-->D[gateway service 2]
         E[user X]-->F[gateway service N]
@@ -75,6 +90,15 @@
         B--12f response: read receipt-->A
     ```
 
-* 
+### *online* and *last seen*
+* say B wants to know is A is online and, if not, when A was last online
+    - there has to be a table that the B's gateway has access to
+    - said db had A's id and the last time A was online
+    - db is updated when A does anothing on the app (as long as A is connected to the internet)
+    - there are two states: *online* and *last seen*; set the threshold at your discretion
+    - example: db updates every 10 seconds, therefore, any timestamp under 10s means *online*
+    - A's gateway must talk to a *last-seen* service. said gateway talks to the *last-seen* service any time A talks to the gateway. the service stores A's id and the timestamp of last comms with the gateway. said service must be smart enough to distinguish user-generated from system-generated activity
+
+*  
 
 [def]: ../0x01-tinder/0-tinder.md
