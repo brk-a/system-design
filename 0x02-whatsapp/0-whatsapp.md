@@ -60,7 +60,9 @@
     title: example flow
     ---
     flowchart LR
-        L((users))--A & C & E
+        L((users))--A
+        L--C
+        L--E
         A[user A]--1 auth, message-->B[gateway service 1]
         C[user B]-->D[gateway service 2]
         E[user X]-->F[gateway service N]
@@ -121,7 +123,10 @@
     title: whatsapp group chat
     ---
     flowchart LR
-    A((start))--B & C & D & E
+    A((start))--B
+    A--C
+    A--D
+    A--E
     subgraph group_1
     B[user A]--1 auth, payload-->G[gateway service 1]
     C[user B]-->G
