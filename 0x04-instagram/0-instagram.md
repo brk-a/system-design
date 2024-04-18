@@ -67,5 +67,44 @@
         Activity : +int numOfLikes
     ```
 
+### follow a user
+* two questions:
+    1. who follows you?
+    2. who do you follow?
+* one table with the following:
+    - `follower_id` &rarr; the user id of the follower
+    - `followee_id` &rarr; the user id of the followee (one being followed)
+    - `timestamp` &rarr; time the following begun
+* say user A has id abc-123-xyz. the following query will show all of A's followers
+
+    ```sql
+        SELECT follower_id
+        FROM follow_table
+        WHERE followee_id = "abc-123-xyz";
+    ```
+
+* to find out what/who A follows
+
+    ```sql
+        SELECT followee_id
+        FROM follow_table
+        WHERE follower_id = "abc-123-xyz";
+    ```
+
+### publish a news feed
+
+    ```mermaid
+    ---
+    title: sys design for instagram
+    ---
+    flowchart LR
+    A((users))--user 1-->B[gateway/reverse proxy etc 1]
+    A--user 2-->C[gateway/reverse proxy etc N]
+    A--user 3-->B
+    A--user N-->C
+    B-->D[user feed service]
+    C-->D
+    
+    ```
 
 [def]: ../0x01-tinder/0-tinder.md
