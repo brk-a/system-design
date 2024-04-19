@@ -92,6 +92,21 @@
     ```
 
 ### publish a news feed
+* gateway will have the auth, reverse proxy etc required to interface outside comms protocols with internal ones
+* user may send a request to gateway using HTTP or XMPP (web sockets) etc
+* gateway connects to user feed service (a cluster of servers, typically); there may be load balancers to distribute user requests equitably
+* gateway also has a mapping/snapshot of what user feed service boxes are available and where they are located
+* the user request uses said mapping to tell the load balancer where it needs to get the relevant box (assume consistent hashing)
+* to get a set of what user A follows, a method, say, `getUsersFollowedBy("abc-123-xyz")` will form the `GET` request to the follow service
+* to get a set of posts by user A, a method, say, `getPostsByUser("abc-123-xyz")` will form the `GET` request to the posts service
+* we can pre-compute the user feed to make the process efficient
+    - a user feed is, simply, a set of posts that fit a user's criteria
+    - criteria: people/pages/topics a user follows, location, sex etc
+    - say user A follows user B: the former's feed must be updated every time the latter posts
+    - generally, the posts service must update the user feed service with the latest posts. the user feed service must figure out which posts are relevant to an individual user and avail them
+    - the user profile service will ask the follow service for a set of what user A follows. if the `userID` of the post matches with a user id in the set returned by the follow service, then that post can be viewed by user A because user A follows the author of the post
+    - iterate over every user in the DB
+* use a cache to store pre-computed user feeds for easy and efficient retrieval
 
     ```mermaid
     ---
@@ -104,7 +119,14 @@
     A--user N-->C
     B-->D[user feed service]
     C-->D
-    
+    E[posts service]<-->D
+    F[follow service]<-->D
+    B-->G[(DB)]
+    C-->H[(DB)]
+    D-->I[(DB)]
+    E-->J[(DB)]
+    F-->K[(DB)]
+    D-.->L[cache]
     ```
 
 [def]: ../0x01-tinder/0-tinder.md
