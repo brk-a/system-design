@@ -129,4 +129,13 @@
     D-.->L[cache]
     ```
 
+### celebrity post fan-out
+* what happens when a user that has millions of followers posts?
+    - all  the followers will ahve to receive a notification and the post would have to appear on their feeds
+    - this will crash the system if we use the current set-up
+* two approaches to solve this
+    - batch processing: send the notifications and feeds in, well, batches of, say, 1000. you will apply rate limiting etc
+    - let the followers pull notifications from the server. each follower pools the server regularly and recives, in their feed, posts from the users they follow
+* apply a pull, not a push, model; the former excels at fanning out, the latter is seamless from a UX perspective
+
 [def]: ../0x01-tinder/0-tinder.md
