@@ -56,3 +56,38 @@
             C-->|yes| E[add the new k-v pair to the head]
             C-->|no| F[remove the k-v pair that is at the tail and add the new k-v pair to the head]
         ```
+
+### distributing the cache
+* have a cache for each service host
+* each host stores a portion of the data
+    - example: two service hosts w. a cache each
+    - data is indexed alphabetically
+    - first cache stores data in the range A to M
+    - second cache stores data in the range N to Z
+* each host knows about both caches and sends requests to the relevant one
+
+     ```mermaid
+    ---
+    title: distributed cache (dedicated cache cluster)
+    ---
+    flowchart TD
+    A[service-host-A]-.->B[LRU cache]
+    C[service-host-B]-.->D[LRU cache]
+    A-.->D
+    C-.->B
+    ```
+
+    ```mermaid
+    ---
+    title: distributed cache (co-located cache)
+    ---
+    flowchart TD
+    subgraph service-host-A
+    A[server A]-.->B[LRU cache]
+    end
+    subgraph service-host-B
+    C[server B]-.->D[LRU cache]
+    end
+    A-.->D
+    C-.->B
+    ```
