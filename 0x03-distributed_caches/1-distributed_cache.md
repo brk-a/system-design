@@ -91,3 +91,22 @@
     A-.->D
     C-.->B
     ```
+
+* dedicated cache cluster vs co-located cache
+
+    |dedicated cache cluster|co-located cache|
+    |:---:|:---:|
+    |service and cache resources are isolated|no need for extra hardware|
+    |can be used by multiple services|cache scales directly proportionally to service|
+    |allows flexibility when choosing hardware|less operational cost|
+
+* choosing a cache
+    * two approaches: naive and consistent hashing
+    * in the naive approach, a service chooses a host using a `mod` function that operates on a hash function, a key and the number of cache hosts. this is not used in production
+    <br/>
+    $cacheHostNumber = hashFunction(key) \mod numberOfCacheHosts$
+    <br/>
+    * in the consistent hashing approach, each object is [mapped to a point on a circle][def]; a [unit circle][def2] is best. each cache host will fall on a point on the circle and *"owns"* the space between said host and the nearest anti-clockwise neighbour (or clockwise, depending on your configuration). the position of each host will not change no matter how many more hosts are added; if a host is mapped between two existing ones, it assumes the range of keys to its left (anti-clockwise) or right (clockwise) depending on configuration
+
+[def]: https://math.libretexts.org/Courses/North_Hennepin_Community_College/Math_1120%3A_College_Algebra_(Lang)/06%3A_Trigonometric_Functions_of_Angles/6.03%3A_Points_on_Circles_Using_Sine_and_Cosine
+[def2]: https://math.libretexts.org/Courses/City_University_of_New_York/College_Algebra_and_Trigonometry-_Expressions_Equations_and_Graphs/04%3A_Introduction_to_Trigonometry_and_Transcendental_Expressions/4.01%3A_Trigonometric_Expressions/4.1.04%3A_The_Unit_Circle
