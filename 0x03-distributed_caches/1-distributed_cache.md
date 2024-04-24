@@ -9,7 +9,7 @@
     2. decrease latency of the system
     3. serve requests as usual, for some period of time, when data store is slow or down
 ### approach
-* build a cache and in memory
+* build a cache ~~and in memory~~
 * web app talks to the data store IFF there is a cache miss
 ### why is it called a distributed cache
 * data is too large to be stored in one machine/box
@@ -20,7 +20,7 @@
     * `put(key, value)` &rarr; stores object & sum-unique-key in cache 
     * `get(key)` &rarr; retrieves object by sum-unique-key from cache
 #### 2. non-functional
-* implement a chache that is
+* implement a cache that is
     * scalable &rarr; handles large and small amounts of data proportionally and efficiently
     * available &rarr; data in cache survives hardware and/or network failures
     * fast &rarr; *put*s and *get*s happen quickly
@@ -50,7 +50,7 @@
         title: flow of LRU during PUT op
         ---
         flowchart TD
-            A[GET]-->B{key in cache?}
+            A[PUT]-->B{key in cache?}
             B-->|no| C{ is cache full?}
             B-->|yes| D[move the k-v pair to the top/head]
             C-->|yes| E[add the new k-v pair to the head]
@@ -66,7 +66,7 @@
     - second cache stores data in the range N to Z
 * each host knows about both caches and sends requests to the relevant one
 
-     ```mermaid
+    ```mermaid
     ---
     title: distributed cache (dedicated cache cluster)
     ---
@@ -102,11 +102,87 @@
 
 * choosing a cache
     * two approaches: naive and consistent hashing
-    * in the naive approach, a service chooses a host using a `mod` function that operates on a hash function, a key and the number of cache hosts. this is not used in production
-    <br/>
+    * in the naive approach, a service chooses a host using a `mod` function that operates on a hash function, a key and the number of cache hosts. this is not used in production<br/>
     $cacheHostNumber = hashFunction(key) \mod numberOfCacheHosts$
-    <br/>
-    * in the consistent hashing approach, each object is [mapped to a point on a circle][def]; a [unit circle][def2] is best. each cache host will fall on a point on the circle and *"owns"* the space between said host and the nearest anti-clockwise neighbour (or clockwise, depending on your configuration). the position of each host will not change no matter how many more hosts are added; if a host is mapped between two existing ones, it assumes the range of keys to its left (anti-clockwise) or right (clockwise) depending on configuration
+    * <br/> in the consistent hashing approach, each object is [mapped to a point on a circle][def]; a [unit circle][def2] is best. each cache host will fall on a point on the circle and *"owns"* the space between said host and the nearest anti-clockwise neighbour (or clockwise, depending on your configuration). the position of each host will not change no matter how many more hosts are added; if a host is mapped between two existing ones, it assumes the range of keys to its left (anti-clockwise) or right (clockwise) depending on configuration
+    * cache client is responsible for making the callculations and routing requests to the correct cache
+        - a light-weight library that is integrated in the service host
+        - knows all cache servers
+        - requires all cache clients to have the same list of servers
+        - stores list of servers in sorted order, e.g., by hash value (`TreeMap` in java)
+        - uses a binary search to id the server required; takes O(log(N)) time
+        - uses UDP or TCP to talk to servers
+        - treats an unavailable server as a cache miss 
+
+            ```mermaid
+            ---
+            title: cache client
+            ---
+            flowchart LR
+            subgraph service
+            A[cache client]-.-B[cache server N]
+            end
+            C((user))-.-service
+            A-.-D[cache server 1]
+            ```
+
+    * approaches to maintain a list of cache servers
+        1. have said list in the service but outside the cache client using a CI/CD pipeline. is the simplest approach. requires configuration management tools, e.g. Puppet  and Chef, to deploy the list to every service host every time said list is modified. list has to be maintained manually
+
+            ```mermaid
+            ---
+            title: list of cache server host names and ports on service host
+            ---
+            flowchart TD
+            subgraph service_1
+            A[cache client]
+            B[list]
+            end
+            subgraph service_N
+            C[cache client]
+            D[list]
+            end
+            ```
+
+        2. have the list on a dedicated storage, say, S3, that can be accessed by all service hosts. may require a daemon to run on every service host. said daemon pulls data from storage regularly. requires configuration management tools to deploy the list to every service host every time said list is modified. list has to be maintained manually 
+
+            ```mermaid
+            ---
+            title: list of cache server host names and ports on common storage
+            ---
+            flowchart TD
+            subgraph service_1
+            A[cache client]
+            end
+            subgraph service_N
+            B[cache client]
+            end
+            service_1--C[(storage)]
+            service_N--C
+            C--D[list]
+            ```
+
+        3. have a configuration service, e.g. ZooKeeper, to discover cache hosts and monitor their health. each cache host registers with the config service and sends *heartbeats* to the server regularly. said server's registration in the system is maintained as long as the *heartbeats* keep coming (think "continued protection" as long as the "protection money" keeps coming in). config service deregisters a server whose *heartbeat* fails to appear at the expected interval. every service host gets the list of registered (available) cache servers from config service. most expensive approach, however, everything is automated
+
+            ```mermaid
+            ---
+            title:
+            ---
+            flowchart TD
+            subgraph service_1
+            A[cache client]
+            end
+            subgraph service_N
+            B[cache client]
+            end
+            C[configuration service]--service_1
+            C[configuration service]--service_N
+            C--D[cache server 1]
+            C--E[cache server 2]
+            C--F[cache server N]
+            ```
+
+        4.  
 
 [def]: https://math.libretexts.org/Courses/North_Hennepin_Community_College/Math_1120%3A_College_Algebra_(Lang)/06%3A_Trigonometric_Functions_of_Angles/6.03%3A_Points_on_Circles_Using_Sine_and_Cosine
 [def2]: https://math.libretexts.org/Courses/City_University_of_New_York/College_Algebra_and_Trigonometry-_Expressions_Equations_and_Graphs/04%3A_Introduction_to_Trigonometry_and_Transcendental_Expressions/4.01%3A_Trigonometric_Expressions/4.1.04%3A_The_Unit_Circle
