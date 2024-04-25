@@ -82,6 +82,7 @@
     C-.->B
     ```
 
+
     ```mermaid
     ---
     title: distributed cache (co-located cache)
@@ -244,8 +245,8 @@
             ---
             flowchart LR
             subgraph config_service
-            A[node 1]--B[node 2]
-            B--C[node N]
+            A[config service 1]--B[config service 2]
+            B--C[config service N]
             c--A
             end     
             ```
