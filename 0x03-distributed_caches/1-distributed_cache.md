@@ -101,6 +101,7 @@
     |allows flexibility when choosing hardware|less operational cost|
 
 * choosing a cache
+    * method [sharding][def3]
     * two approaches: naive and consistent hashing
     * in the naive approach, a service chooses a host using a `mod` function that operates on a hash function, a key and the number of cache hosts. this is not used in production<br/>
     $cacheHostNumber = hashFunction(key) \mod numberOfCacheHosts$
@@ -182,7 +183,63 @@
             C--F[cache server N]
             ```
 
-        4.  
+### acheving high availability
+* method: [data replication][def4]
+* approaches
+    1. probabilistic protocols e.g. bimodal multicast
+    2. consensus protocols &rarr; favour strog consistency
+* leader-follower approach
+    - a subset of the consensus protocol approach
+    - one leader (master) cache, many follower (slave) caches; follower caches' objective is to be a replica of the leader
+    - follower, automatically, tries to connect to leader when the connection between them breaks for whatever reason
+    - follower caches live in different data centres
+    - `PUT` requests from cache client go through the leader cache
+    - `GET` requests are handles by the leader and closest-proximity follower cache
+
+
+        ```mermaid
+        ---
+        title: leader-follower approach
+        ---
+        subgraph service
+        A[cache client]
+        end
+        service--PUT, GET--B[leader]
+        subgraph data_centre_1
+        C[follower 1]
+        end
+        subgraph data_centre_2
+        D[follower 2]
+        end
+        subgraph data_centre_N
+        E[follower N]
+        end
+        B--data_centre_1
+        B--data_centre_2
+        B--data_centre_N
+        service--GET--data_centre_2
+        ```
+
+    - leader cache is elected in one of two ways:
+        1. dedicated leader cache
+        2. have a configuration service that selects the leader based on a set of rules; a follower can be promoted when a leader is down or otherwise incapable
+
+
+        ```mermaid
+        ---
+        title: select a leader - config service
+        ---
+        flowchart LR
+        subgraph config_service
+        A[node 1]--B[node 2]
+        B--C[node N]
+        c--A
+        end     
+        ```
+
+
 
 [def]: https://math.libretexts.org/Courses/North_Hennepin_Community_College/Math_1120%3A_College_Algebra_(Lang)/06%3A_Trigonometric_Functions_of_Angles/6.03%3A_Points_on_Circles_Using_Sine_and_Cosine
 [def2]: https://math.libretexts.org/Courses/City_University_of_New_York/College_Algebra_and_Trigonometry-_Expressions_Equations_and_Graphs/04%3A_Introduction_to_Trigonometry_and_Transcendental_Expressions/4.01%3A_Trigonometric_Expressions/4.1.04%3A_The_Unit_Circle
+[def3]: https://en.wikipedia.org/wiki/Shard_(database_architecture)
+[def4]: https://en.wikipedia.org/wiki/Replication_(computing)
