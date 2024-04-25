@@ -33,6 +33,7 @@
     - a doubly-linked-list works
     - during `GET`, check whether `key` the cache. if not, return `null`, else, move the k-v pair to the top of the queue and return the `value`
 
+
         ```mermaid
         ---
         title: flow of LRU during GET op
@@ -43,7 +44,9 @@
             B-->|yes| D[move key-value to head of list and return value]
         ```
 
+
     - during `PUT`, check whether `key` is in the cache(use `key` to get value of `value`). id yes, update `value` and move the k-v pair to the top of the queue, else, check if cache is full. if yes, add the new k-v pair to the head of the queue, else, remove the k-v pair that is at the tail of queue and add the new k-v pair to the head of the queue
+
 
          ```mermaid
         ---
@@ -57,6 +60,7 @@
             C-->|no| F[remove the k-v pair that is at the tail and add the new k-v pair to the head]
         ```
 
+
 ### distributing the cache
 * have a cache for each service host
 * each host stores a portion of the data
@@ -65,6 +69,7 @@
     - first cache stores data in the range A to M
     - second cache stores data in the range N to Z
 * each host knows about both caches and sends requests to the relevant one
+
 
     ```mermaid
     ---
@@ -115,6 +120,7 @@
         - uses UDP or TCP to talk to servers
         - treats an unavailable server as a cache miss 
 
+
             ```mermaid
             ---
             title: cache client
@@ -127,8 +133,10 @@
             A-.-D[cache server 1]
             ```
 
+
     * approaches to maintain a list of cache servers
         1. have said list in the service but outside the cache client using a CI/CD pipeline. is the simplest approach. requires configuration management tools, e.g. Puppet  and Chef, to deploy the list to every service host every time said list is modified. list has to be maintained manually
+
 
             ```mermaid
             ---
@@ -145,7 +153,9 @@
             end
             ```
 
+
         2. have the list on a dedicated storage, say, S3, that can be accessed by all service hosts. may require a daemon to run on every service host. said daemon pulls data from storage regularly. requires configuration management tools to deploy the list to every service host every time said list is modified. list has to be maintained manually 
+
 
             ```mermaid
             ---
@@ -163,7 +173,9 @@
             C--D[list]
             ```
 
+
         3. have a configuration service, e.g. ZooKeeper, to discover cache hosts and monitor their health. each cache host registers with the config service and sends *heartbeats* to the server regularly. said server's registration in the system is maintained as long as the *heartbeats* keep coming (think "continued protection" as long as the "protection money" keeps coming in). config service deregisters a server whose *heartbeat* fails to appear at the expected interval. every service host gets the list of registered (available) cache servers from config service. most expensive approach, however, everything is automated
+
 
             ```mermaid
             ---
@@ -183,6 +195,7 @@
             C--F[cache server N]
             ```
 
+
 ### acheving high availability
 * method: [data replication][def4]
 * approaches
@@ -197,45 +210,47 @@
     - `GET` requests are handles by the leader and closest-proximity follower cache
 
 
-        ```mermaid
-        ---
-        title: leader-follower approach
-        ---
-        subgraph service
-        A[cache client]
-        end
-        service--PUT, GET--B[leader]
-        subgraph data_centre_1
-        C[follower 1]
-        end
-        subgraph data_centre_2
-        D[follower 2]
-        end
-        subgraph data_centre_N
-        E[follower N]
-        end
-        B--data_centre_1
-        B--data_centre_2
-        B--data_centre_N
-        service--GET--data_centre_2
-        ```
+            ```mermaid
+            ---
+            title: leader-follower approach
+            ---
+            subgraph service
+            A[cache client]
+            end
+            service--PUT, GET--B[leader]
+            subgraph data_centre_1
+            C[follower 1]
+            end
+            subgraph data_centre_2
+            D[follower 2]
+            end
+            subgraph data_centre_N
+            E[follower N]
+            end
+            B--data_centre_1
+            B--data_centre_2
+            B--data_centre_N
+            service--GET--data_centre_2
+            ```
 
     - leader cache is elected in one of two ways:
         1. dedicated leader cache
         2. have a configuration service that selects the leader based on a set of rules; a follower can be promoted when a leader is down or otherwise incapable
 
 
-        ```mermaid
-        ---
-        title: select a leader - config service
-        ---
-        flowchart LR
-        subgraph config_service
-        A[node 1]--B[node 2]
-        B--C[node N]
-        c--A
-        end     
-        ```
+            ```mermaid
+            ---
+            title: select a leader - config service
+            ---
+            flowchart LR
+            subgraph config_service
+            A[node 1]--B[node 2]
+            B--C[node N]
+            c--A
+            end     
+            ```
+
+
 
 
 
