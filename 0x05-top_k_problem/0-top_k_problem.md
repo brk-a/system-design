@@ -38,5 +38,40 @@
 * how do we approach the problem when #hosts > 1?
     - perform calculations in parallel, trivially
     - perhaps a load balancer...
+    - balancer could be a typical one or a distributed queue
+    - identifire(s) may appear on ore than one processor host, therefore, said hosts must aggregate their output to a storage host
+
+        ```mermaid
+        ---
+        title: hash table w. multiple processor hosts
+        ---
+        flowchart LR
+        A[A B C A A D C A B C]-->B[load balancer]
+        B-->C[C=2, D=1 A=2, B=1]
+        B-->D[C=1, A=2, B=1]
+        C-->E[C=3, D=1, A=4, B=2]
+        D-->E
+        ``` 
+    
+    - the load balancer increases throughput of the system
+    - we, now, must deal with memory constraints on processor hosts and storage host
+    - perhaps break data into smaller chunks
+    - data passes through data partitioner. data partitioner, well, *partitions* data on the table. partitions are sent to specific processor hosts
+    - inside each processor host, create a hash table out of partitioned data. create a list of *top k* using a heap from data in the hash table
+    - merge sorted lists (heaps) and store them in the storage host
+
+        ```mermaid
+        ---
+        title: hash table w. multiple processor hosts and data partitioner
+        ---
+        flowchart LR
+        A[A B E C A F A D C A B C]-->B[data partitioner]
+        B-->C[C=3, D=1, B=2]
+        B-->D[A=4, E=1, F=1]
+        C-->E[A=4, C=3, B=2, E=1]
+        D-->E
+        ```
+    
+    - processor host passes a list of size k to storage host
 
 [def]: ./0-top_k_problem_single_host.java
