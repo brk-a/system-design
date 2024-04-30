@@ -73,5 +73,17 @@
         ```
     
     - processor host passes a list of size k to storage host
+* new problem: unbounded data set; that is, a data set of size N where N approaches &infin;
+    - use time as a bound, that is, implement the previous approach on data captured w/i a specified time interval, say, a minute
+    - example: list of top k watched videos. capture data for a minute, find top k most watched. store in storage host. perform these ops EMOM
+    - say you want to get top k per hour yet you have 60 top k*s* per minute. there's no precise solution, imo; looking for answers too... ::hourglass::
+    - we can, however, store the per-minute data on the storage host then apply a batch-process-top-k op on every 60 data sets
+* new problem: consistency of data in partitions
+    - we, somehow, must replicate data on each partition or ensure consistency otherwise
+    - consistency must hold when adding or removing partitions
+    - there are solutions, however, they have trade-offs; the most significant is accuracy
+    - enter *count-min sketch*...
+
+
 
 [def]: ./0-top_k_problem_single_host.java
