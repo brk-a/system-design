@@ -83,12 +83,37 @@
     - consistency must hold when adding or removing partitions
     - there are solutions, however, they have trade-offs; the most significant is accuracy
     - enter *count-min sketch*...
-    - count-min sketch is a data structure. think of it as a 2D array: the width is the pre-defined length of any of the arrays and the height is the number of hash functions in the structure
-    - calculate the hash value of incoming data using each function and add one to the corresponding index in the respective array
-    - example store A to the count-min sketch: use hash function to calc hash value of A using its identifier. the hash value is an index, *i*, on the array that corresponds to the repective hash functions. there will be N hash values, i<sub>n</sub>, where N is the number of hash functions and 0 &le; n &le; N. use said hash values to add one to the value of A\[i<sub>n</sub>\] in each array
-    - there will be collisions; that is alright
-    - to retrieve data, take the min value of all counters of A
-    - to choose width and height of count-min sketch, you need *d* &rarr; certainity with which we achieve accuracy and *e* &rarr; accuracy we want to have
+        - count-min sketch is a data structure. think of it as a 2D array: the width is the pre-defined length of any of the arrays and the height is the number of hash functions in the structure
+        - calculate the hash value of incoming data using each function and add one to the corresponding index in the respective array
+        - example store A to the count-min sketch: use hash function to calc hash value of A using its identifier. the hash value is an index, *i*, on the array that corresponds to the repective hash functions. there will be N hash values, i<sub>n</sub>, where N is the number of hash functions and 0 &le; n &le; N. use said hash values to add one to the value of A\[i<sub>n</sub>\] in each array
+        - there will be collisions; that is alright
+        - to retrieve data, take the min value of all counters of A
+        - to choose width and height of count-min sketch, you need *d* &rarr; certainity with which we achieve accuracy and *e* &rarr; accuracy we want to have
+    - how does count-min sketch apply to our problem? glad you asked...
+        - count-min sketch replaces the size-N hash table that receives the stream of data because, unlike the original hash table, count-min sketch is a hash table that grows big without growing big
+        - we still need a heap to store the heavy hitters (the top k itema)
+        - 
+
+    
+    ```mermaid
+    ---
+    title: high-level architecture
+    ---
+    flowchart LR
+    A((user))--B[API gateway]
+    B--C[distributed messaging system]
+    C--fast path--D[fast processor count-min sketch]
+    C--slow path--E[slow processor]
+    D--F[storage processor]
+    E--G[distributed messaging system]
+    G--H[partition processor]
+    H--I[distributed file sys]
+    I--J[frequency count mapReduce job]
+    J--K[top K map reduce job]
+    H--F
+    K--F
+    F--L[(DB)]
+    ```
 
 
 
