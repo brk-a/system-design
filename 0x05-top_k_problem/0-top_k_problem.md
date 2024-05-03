@@ -115,6 +115,54 @@
     F--L[(DB)]
     ```
 
+    - data flow: fast path
+
+        ```mermaid
+        ---
+        title: fast path data flow
+        ---
+        flowchart LR
+        A((user 1))--A, B, A-->B[API gateway 1]
+        C((user N))--A, C-->D[API gateway 2]
+        A--C-->E[API gateway N]
+        B--A-->E
+        B--A=2, B=1-->F[distributed messaging sys]
+        D--A=1, C=1-->F
+        E--A=1, C=1-->F
+        F--A=2, B=1, A=1-->G[fast processor 1]
+        F--A=1, C=1, C=1-->H[fast processor N]
+        G--A=4, B=1, C=2-->I[storage processor]
+        H-->I
+        ```
+
+    - data flow: slow path
+
+        ```mermaid
+        ---
+        title: slow path data flow
+        ---
+        flowchart LR
+        A((user 1))--A, B, A-->B[API gateway 1]
+        C((user N))--A, C-->D[API gateway 2]
+        A--C-->E[API gateway N]
+        B--A-->E
+        B--A=2, B=1-->F[distributed messaging sys]
+        D--A=1, C=1-->F
+        E--A=1, C=1-->F
+        F-->G[data partitioner 1]
+        F-->H[data partitioner N]
+        G--B=1-->I[distributed messaging sys 1]
+        H--A=2, A=1-->J[distributed messaging sys 2]
+        G--A=1-->J
+        H--C=2-->K[distributed messaging sys N]
+        I--B=1-->L[patition processor 1]
+        J--A=4-->M[patition processor 2]
+        K--C=2-->N[patition processor N]
+        L-->O[distributed file sys]
+        M-->O[distributed file sys]
+        N-->O[distributed file sys]
+        O--A=4, B=1, C=2-->P[frequency count mapReduce]
+        ```
 
 
 [def]: ./0-top_k_problem_single_host.java
