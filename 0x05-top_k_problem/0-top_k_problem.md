@@ -102,8 +102,8 @@
     flowchart LR
     A((user))---B[API gateway]
     B---C[distributed messaging system]
-    C--fast path--D[fast processor count-min sketch]
-    C--slow path--E[slow processor]
+    C---fast path---D[fast processor count-min sketch]
+    C---slow path---E[slow processor]
     D---F[storage processor]
     E---G[distributed messaging system]
     G---H[partition processor]
@@ -178,7 +178,7 @@
             title: mapReduce - frequency count phase
             ---
             flowchart LR
-            A[B=2, A=5, C=2]--B[B=3]
+            A[B=2, A=5, C=2]---B[B=3]
             A---C[A=5]
             A---D[C=2]
             E[B=6, D=15, A=7]---F[B=6]
@@ -215,7 +215,7 @@
             title: mapReduce - top k phase
             ---
             flowchart LR
-            A[[A=12, B=9, C=2, D=15]]---B[]
+            A[A=12, B=9, C=2, D=15]---B[]
             A---C[]
             A---D[]
             ```
