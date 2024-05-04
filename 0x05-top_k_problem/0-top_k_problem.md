@@ -100,22 +100,23 @@
     title: high-level architecture
     ---
     flowchart LR
-    A((user))--B[API gateway]
-    B--C[distributed messaging system]
+    A((user))---B[API gateway]
+    B---C[distributed messaging system]
     C--fast path--D[fast processor count-min sketch]
     C--slow path--E[slow processor]
-    D--F[storage processor]
-    E--G[distributed messaging system]
-    G--H[partition processor]
-    H--I[distributed file sys]
-    I--J[frequency count mapReduce job]
-    J--K[top K map reduce job]
-    H--F
-    K--F
-    F--L[(DB)]
+    D---F[storage processor]
+    E---G[distributed messaging system]
+    G---H[partition processor]
+    H---I[distributed file sys]
+    I---J[frequency count mapReduce job]
+    J---K[top K map reduce job]
+    H---F
+    K---F
+    F---L[(DB)]
     ```
 
     - data flow: fast path
+
 
         ```mermaid
         ---
@@ -136,6 +137,7 @@
         ```
 
     - data flow: slow path
+
 
         ```mermaid
         ---
@@ -163,6 +165,61 @@
         N-->O[distributed file sys]
         O--A=4, B=1, C=2-->P[frequency count mapReduce]
         ```
+
+* `mapReduce` jobs
+    - data is split into phases
+        - the input job is a set of files split into independent chunks
+            - split phase: input files are split and said chunks are processed in a parallel manner
+            - map phase: the chunks are aggregated into maps, `Map<K, V>`, called *intermediate values*. said values are put into partitions
+            - shuffle and sort phase: data is aggregated by keys
+
+            ```mermaid
+            ---
+            title: mapReduce - frequency count phase
+            ---
+            flowchart LR
+            A[B=2, A=5, C=2]--B[B=3]
+            A---C[A=5]
+            A---D[C=2]
+            E[B=6, D=15, A=7]---F[B=6]
+            E---G[D=15]
+            E---H[A=7]
+            B---I[B: 3, A: 5, C: 2]
+            C---I
+            D---I
+            F---J[B: 6, D: 15, A: 7]
+            G---J
+            H---J
+            I---K["A (5, 7)"]
+            I---L["B (3, 6)"]
+            I---M["C (2)"]
+            J---L
+            J---M
+            J---N["D (15)"]
+            K---O[A: 12]
+            L---P[B: 9]
+            M---Q[C: 2]
+            N---R[D: 15]
+            O---S[A=12, B=9, C=2, D=15]
+            P---S
+            Q---S
+            R---S
+            S---T((to top-k mapReduce phase))
+            ```
+
+
+        - the
+
+            ```mermaid
+            ---
+            title: mapReduce - top k phase
+            ---
+            flowchart LR
+            A[[A=12, B=9, C=2, D=15]]---B[]
+            A---C[]
+            A---D[]
+            ```
+
 
 
 [def]: ./0-top_k_problem_single_host.java
