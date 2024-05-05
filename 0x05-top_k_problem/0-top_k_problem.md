@@ -75,7 +75,7 @@
     - processor host passes a list of size k to storage host
 * new problem: unbounded data set; that is, a data set of size N where N approaches &infin;
     - use time as a bound, that is, implement the previous approach on data captured w/i a specified time interval, say, a minute
-    - example: list of top k watched videos. capture data for a minute, find top k most watched. store in storage host. perform these ops EMOM
+    - example: list of top k watched videos. capture data for a minute, find top k most watched. store in storage host. perform these ops [OMEM][def2]
     - say you want to get top k per hour yet you have 60 top k*s* per minute. there's no precise solution, imo; looking for answers too... ::hourglass::
     - we can, however, store the per-minute data on the storage host then apply a batch-process-top-k op on every 60 data sets
 * new problem: consistency of data in partitions
@@ -91,29 +91,29 @@
         - to choose width and height of count-min sketch, you need *d* &rarr; certainity with which we achieve accuracy and *e* &rarr; accuracy we want to have
     - how does count-min sketch apply to our problem? glad you asked...
         - count-min sketch replaces the size-N hash table that receives the stream of data because, unlike the original hash table, count-min sketch is a hash table that grows big without growing big
-        - we still need a heap to store the heavy hitters (the top k itema)
+        - we still need a heap to store the heavy hitters (the top k items)
         - 
 
     
-    ```mermaid
-    ---
-    title: high-level architecture
-    ---
-    flowchart LR
-    A((user))---B[API gateway]
-    B---C[distributed messaging system]
-    C---fast path---D[fast processor count-min sketch]
-    C---slow path---E[slow processor]
-    D---F[storage processor]
-    E---G[distributed messaging system]
-    G---H[partition processor]
-    H---I[distributed file sys]
-    I---J[frequency count mapReduce job]
-    J---K[top K map reduce job]
-    H---F
-    K---F
-    F---L[(DB)]
-    ```
+        ```mermaid
+        ---
+        title: high-level architecture
+        ---
+        flowchart LR
+        A((user))---B[API gateway]
+        B---C[distributed messaging system]
+        C-fast path-D[fast processor count-min sketch]
+        C-slow path-E[slow processor]
+        D---F[storage processor]
+        E---G[distributed messaging system]
+        G---H[partition processor]
+        H---I[distributed file sys]
+        I---J[frequency count mapReduce job]
+        J---K[top K map reduce job]
+        H---F
+        K---F
+        F---L[(DB)]
+        ```
 
     - data flow: fast path
 
@@ -193,8 +193,8 @@
             I---K["A (5, 7)"]
             I---L["B (3, 6)"]
             I---M["C (2)"]
+            J---K
             J---L
-            J---M
             J---N["D (15)"]
             K---O[A: 12]
             L---P[B: 9]
@@ -208,18 +208,34 @@
             ```
 
 
-        - the
+        - the top k phase viz:
 
             ```mermaid
             ---
             title: mapReduce - top k phase
             ---
             flowchart LR
-            A[A=12, B=9, C=2, D=15]---B[]
-            A---C[]
-            A---D[]
+            A[A=12, B=9, C=2, D=15]---B[local top k]
+            A---C[local top k]
+            A---D[local top k]
+            B---E[global top k]
+            C---E
+            D---E
+            E---F[final top k]
             ```
 
 
+* new problem: how do we retrieve data?
+    - specifically, how do we retrieve a list of *top k* items for a specified time interval?
+    - API gateway must expose top k operation
+    - said gateway will route calls to storage service
+    - storage service retrieves data from underlying DB
+    - say the fast path stores top k lists for OMEM and the slow path does the same on the hour, every hour
+        - to get the top k list for the last five minutes, merge the latest five per-minute top k lists: somewhat accurate
+        - to get the top k list for the last hour, get the latest per-hour list: almost accurate
+        - to get the top k list for the last two hours, merge the latest two per-hour lists: not accurate
+        - 
+
 
 [def]: ./0-top_k_problem_single_host.java
+[def2]: On the Minute, Every Minute
