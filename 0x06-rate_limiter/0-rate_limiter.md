@@ -1,0 +1,26 @@
+# rate limiter
+* design a rate-limiting system
+### problem: noisy neighbour
+* say we have a web app that, for one reason or the other, has become popular
+* said app receives thousands of requests per second to the FE
+* everything is alright until one of the clients (users) sends a lot more requests than normal
+    - could be said client is another popular web app/service
+    - could be a DoS or DDoS
+    - could be that the client is running a load test
+    - etc
+* The situation where a client hogs a significant proportion of shared resources is called the *noisy neighbour problem*
+    - therest of the clients experience higher latency and request failure rates
+### requirements
+#### overall
+* have a system that limits the rate at which a client's requests are handled
+    - say, a service that accepts three requests per second per client: this is called *throttling*
+#### functional 
+#### non-functional
+### why do we need a system?
+* could we not, simply, write a software that scales to andle a high load?
+    - glad you asked...
+    - auto-scaling takes time; that time is all that is required to wreck the system
+* why not implement max connections on the load balancer and max-thread-count on the service endpoint?
+    - load balancer will, by definition, prevent too many requests to be directed at one service/server, however, its mechanism is indiscriminate: it cannot tell whether a request is resource-intensive or not, therefore, there is the strong probability of accepting all the resource-intensive requests at once. you can limit them at the application server level, not the load balancer level
+* 
+### approach
