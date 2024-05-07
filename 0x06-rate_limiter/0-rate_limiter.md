@@ -14,13 +14,24 @@
 #### overall
 * have a system that limits the rate at which a client's requests are handled
     - say, a service that accepts three requests per second per client: this is called *throttling*
-#### functional 
+#### functional
+* create a fn, `bool allowRequest(request)`, that takes in a request and returns a boolean. said boolean indicates whether or not said request is throttled 
 #### non-functional
-### why do we need a system?
+* low latency &rarr; make decision(s) asap
+* accurate &rarr; throttle requests only when necessary
+* scalable &rarr; supports an arbitrarily large #hosts in the cluster
+#### why do we need a system?
 * could we not, simply, write a software that scales to andle a high load?
     - glad you asked...
     - auto-scaling takes time; that time is all that is required to wreck the system
 * why not implement max connections on the load balancer and max-thread-count on the service endpoint?
     - load balancer will, by definition, prevent too many requests to be directed at one service/server, however, its mechanism is indiscriminate: it cannot tell whether a request is resource-intensive or not, therefore, there is the strong probability of accepting all the resource-intensive requests at once. you can limit them at the application server level, not the load balancer level
-* 
+* the problem does not appear to be a system design one; can we not throttle each host individually?
+    - that works in the ideal/imaginary/theoretical world; this is the real world
+    - say a load balancer distributes request evenly among the servers it sits in front of
+    - say each request takes the same amount of time to fulfill
+    - this is a single instance problem; there is no need for a distributed rate limiter
+    - in the real world, however, load balancers hardly distribute loads evenly and some requests take longer than others to fulfill
+    - also, each server behaves independently of the rest (no *iid* bullshit) 
 ### approach
+#### single server
