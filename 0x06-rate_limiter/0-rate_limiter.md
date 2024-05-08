@@ -35,3 +35,39 @@
     - also, each server behaves independently of the rest (no *iid* bullshit) 
 ### approach
 #### single server
+* throttle rules retreiver is in the service host; it fetches the rules the host uses to decide whether or not and how to throttle from the rules DB
+* rules DB, which is outside the service host, is accessed through a service
+* a request gets to the service host and is received by the client identifier builder
+* said builder builds an identifier for the request (this is a request from client A, etc); think a combination of attributes that uniquely identify a client
+* builder forwards the identifier to the rate limiter
+* rate limiter checks identifier against rules in the throttle rules cache
+    - match found: rate limiter checks whether #requests in the last interval (second, say) exceed the limit specified in the rules
+        - excceds: queue or reject request
+        - does not exceed: forward request to request processor
+    - match not found reject request
+
+    ```mermaid
+    ---
+    title: request processing for single server
+    ---
+    A(user)
+    flowchart LR
+    subgraph service_host
+    A---B[client identifier builder]
+    B---C[rate limiter]
+    C---D[throttle rules cache]
+    D---E[throttle rules retreiver]
+    C-.allowed.-H[request processor]
+    C-.not allowed.-I[reject]
+    end
+    E---F[rules service]
+    F---G(rules DB)
+    I-.code 503 or 429.-A
+    I---J[queue]
+    I---K[drop]
+    ```
+
+* there are three return codes
+    - 503 (service unavailable) when identifier does not match the rules in the cache
+    - 429 (too many requests) when #requests is above the theshold
+    - 200 (OK) when all rules are satisfied
