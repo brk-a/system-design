@@ -46,12 +46,13 @@
         - does not exceed: forward request to request processor
     - match not found reject request
 
+
     ```mermaid
     ---
     title: request processing for single server
     ---
-    A(user)
     flowchart LR
+    A(user)
     subgraph service_host
     A---B[client identifier builder]
     B---C[rate limiter]
@@ -71,3 +72,42 @@
     - 503 (service unavailable) when identifier does not match the rules in the cache
     - 429 (too many requests) when #requests is above the theshold
     - 200 (OK) when all rules are satisfied
+#### algorithmic approach to throttler: token bucket algo
+* idea is to
+* bucket has three attributes
+    - capacity<sub>max</sub> &rarr; bucket has a max cap
+    - tokens<sub>current</sub> &le; capacity<sub>max</sub> &rarr; current #tokens is less than or equal to the max cap (also, #tokens cannot be less than zero)
+    - rate<sub>arrival</sub> = k &rarr; the rate of arrival of tokens is constant
+* a token is taken from the bucket every time a request is made; request is denied/rejected when #tokens in bucket = zero
+
+    ```mermaid
+        ---
+        title: token bucket
+        ---
+        classDiagram
+        TokenBucket : +long maxBucketSize
+        TokenBucket : +long refillRate
+        TokenBucket : +double currentBucketSize
+        TokenBucket : +long lastRefillTimeStamp
+        TokenBucket : +allowRequest()
+        TokenBucket : +refill()
+    ```
+
+* how the algo works
+    - say at time t0 bucket A has 10 tokens
+    - say that said bucket's capacity is 10 tokens and the refill rate is 10 tokens per second
+    - say at time t1, which is t0 plus 300ms, a request that requires six tokens arrives
+        - allowRequest(6)
+    - the request is allowed because 6 &lt; 10
+    - four tokens remain in the bucket when the request completes
+    - say at time t2, which is t1 plus 200ms, a request that requires five tokens arrives
+        - allowRequest(5)
+    - `allowRequest()` adds two tokens to bucket; there are six tokens in the bucket now
+        - see [0-rate_limiter.java][def]
+        - ((t1+200) - t1) * 10 / 1e3 &rarr; 200ms * 10tokens/s &div; 1000ms = 2 tokens to add
+        - `currentBucketSize` = min(4+2, 10) &rarr; minimum of the remaining tokens in bucket plus tokens to add and `maxBucketSize` = 6 tokens
+    - the request is allowed because 5 &lt; 6
+    - one token remains in the bucket when the request completes
+    - say another reuest arrives at time t3, which is t2 plus 1000ms. the `refill()` function will set the `currentBucketSize` to 10 because min(10+1, 10) is 10
+
+[def]: ./0-rate_limiter.java
