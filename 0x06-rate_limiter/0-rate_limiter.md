@@ -62,7 +62,7 @@
     C-.not allowed.-I[reject]
     end
     E---F[rules service]
-    F---G(rules DB)
+    F---G[(rules DB)]
     I-.code 503 or 429.-A
     I---J[queue]
     I---K[drop]
@@ -72,7 +72,7 @@
     - 503 (service unavailable) when identifier does not match the rules in the cache
     - 429 (too many requests) when #requests is above the theshold
     - 200 (OK) when all rules are satisfied
-#### algorithmic approach to throttler: token bucket algo
+##### algorithmic approach to throttler: token bucket algo
 * idea is to
 * bucket has three attributes
     - capacity<sub>max</sub> &rarr; bucket has a max cap
@@ -81,16 +81,16 @@
 * a token is taken from the bucket every time a request is made; request is denied/rejected when #tokens in bucket = zero
 
     ```mermaid
-        ---
-        title: token bucket
-        ---
-        classDiagram
-        TokenBucket : +long maxBucketSize
-        TokenBucket : +long refillRate
-        TokenBucket : +double currentBucketSize
-        TokenBucket : +long lastRefillTimeStamp
-        TokenBucket : +allowRequest()
-        TokenBucket : +refill()
+    ---
+    title: token bucket
+    ---
+    classDiagram
+    TokenBucket : +long maxBucketSize
+    TokenBucket : +long refillRate
+    TokenBucket : +double currentBucketSize
+    TokenBucket : +long lastRefillTimeStamp
+    TokenBucket : +allowRequest()
+    TokenBucket : +refill()
     ```
 
 * how the algo works
@@ -109,5 +109,43 @@
     - the request is allowed because 5 &lt; 6
     - one token remains in the bucket when the request completes
     - say another reuest arrives at time t3, which is t2 plus 1000ms. the `refill()` function will set the `currentBucketSize` to 10 because min(10+1, 10) is 10
+##### algorithmic approach to throttler: OOP method
+* interfaces and classes
+    * interface `JobScheduler` that schedules jobs. said jobs run at pre-determined intervals. the job is to retrieve rules from the rules service
+    * interface `RulesCache` is responsible for storing rules in memory
+    * interface `ClientIdentifier` creates a uniqe identifier for each client/request
+    * inteface `RateLimiter` makes decisions
+    * class `RetrieveJobScheduler` starts/stops the scheduler (e.g. ScheduledExecutorService) and runs `RetrieveRulesTask` periodically
+    * class `TokenBucketCache` stores token bucket objects
+        - Map, ConcurrentHashMap, Google Guava Cache etc
+    * class `ClientIdentifierBuilder` retrieves client identity info from request context
+    * class `TokenBucketRateLimiter` retrieves token bucket from cache and calls `allowRequest()` on the bucket
+    * class `RetrieveRulesTask` makes a remote call to the `Rules` service, creates token buckets and loads said buckets into cache
+* how it works
+    - `RetrieveJobScheduler` runs `RetrieveRulesTask`
+    - `RetrieveRulesTask` makes a remote call to a rules service
+    - `RetrieveRulesTask`creates token buckets and places them in the `TokenBucketCache`
+    - client request is forwarded to the `TokenBucketRateLimiter`
+    - `TokenBucketRateLimiter` makes a call to `ClientIdentifierBuilder`
+    - `ClientIdentifierBuilder` builds a uniqe id for the client/request
+    - `TokenBucketRateLimiter` passes said unique id to `TokenBucketCache`
+    - `TokenBucketRateLimiter` calls `allowRequest()` on the bucket
+
+
+    ```mermaid
+    ---
+    title: token buckets using OOP
+    ---
+    flowchart LR
+    A(User)--1-->B[TokenBucketRateLimiter]
+    B<--2-->C[ClientIdentifierBuilder]
+    B<--3-->D[TokenBucketCache]
+    D<--E[RetrieveRulesTask]
+    E<--F[RetrieveJobScheduler]
+    E<-->G[rules service]
+    ```
+
+#### distributed approach
+* 
 
 [def]: ./0-rate_limiter.java
