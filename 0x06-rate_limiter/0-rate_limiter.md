@@ -146,6 +146,33 @@
     ```
 
 #### distributed approach
-* 
+* say we have N hosts, M buckets and that our service can handle K requests per second per client. how many tokens should each bucket hold?
+    - each bucket will have K tokens to begin with &rarr; see `refill` method at [0-rate_limiter.java][def]
+    - requests from a host for the same key can, in theory, land at the same bucket, however, our system has a load balancer, therefore, it is not likely that said requests will land on the same bucket
+* example: M = 3, N is finitely large, K = 4 and a load balancer exists
+    - pick a host at random
+    - one request goes to bucket 1; one token is consumed
+        - {1: 3, 2: 4, 3: 4}
+    - another request goes to bucket 3; one token is consumed
+        - {1: 3, 2: 4, 3: 3}
+    - two requests goes to bucket 2 w/i the one-sec interval; two tokens are consumed
+        - {1: 3, 2: 2, 3: 3}
+    - all four requests allowed have been used, however, there are tokens in the buckets
+        - {1: 3, 2: 2, 3: 3}
+    - there has to be a way the buckets can communicate w. each other
+        - bucket 1 sees that three tokens have been used elsewhere, therefore, subtracts three from its remaining tokens (assuming #tokens left &ge; three)
+        - bucket 2 sees that two tokens have been used elsewhere, therefore, subtracts two from its remaining tokens (assuming #tokens left &ge; two)
+        - bucket 3 sees that three tokens have been used elsewhere, therefore, subtracts three from its remaining tokens (assuming #tokens left &ge; three)
+    - there is a vulnerability: the system may process more than four requests because consensus among buckets takes time
+
+    ```mermaid
+    ---
+    title: simple/naive distributed approach
+    ---
+    flowchart TD
+    A[load balancer]---B[bucket 1]
+    A---C[bucket 2]
+    A---D[bucket 3]
+    ```
 
 [def]: ./0-rate_limiter.java
