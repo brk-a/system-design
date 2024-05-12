@@ -175,4 +175,21 @@
     A---D[bucket 3]
     ```
 
+* how do the buckets communicate?
+    * glad you asked...
+    *  ways: message broadcasting, 
+    * message broadcasting &rarr; tell everyone everything. every bucket(host) knows everything about the rest. hosts may use a 3<sup>rd</sup> party service to discover each other and update themselves when a change occurs in one of the others
+
+        ```mermaid
+            ---
+            title: message broadcasting
+            ---
+            flowchart TD
+            A & B --- C & D
+            A --- B
+            C --- D
+        ```
+
+    * gossip protocol *(what!?)* &rarr;
+
 [def]: ./0-rate_limiter.java
