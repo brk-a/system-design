@@ -190,6 +190,47 @@
             C --- D
         ```
 
-    * gossip protocol *(what!?)* &rarr;
+    * gossip protocol *(what!?)* &rarr; based on the way that epidemics spread. computer systems implement this using random peer selection
+
+        ```mermaid
+            ---
+            title: gossip protocol
+            ---
+            flowchart TD
+            A --- B 
+            B --- C
+            C --- D
+            A --- D
+        ```
+    
+    * distributed cache &rarr; see [distributed cache][def2]
+
+        ```mermaid
+            ---
+            title: distributed cache
+            ---
+            flowchart LR
+            A[host A] --- E[in-memory store eg Redis]
+            B[host B] --- E
+            C[host C] --- E
+            D[host D] --- E
+        ```
+
+    * coordination service &rarr; chooses a leader; said leader coordinates the rest of the hosts
+
+        ```mermaid
+        ---
+        title: coordination service
+        ---
+        flowchart TD
+        A[host A] --- C[host C]
+        B[host B] --- C
+        D[host D] --- C
+        E[coordination service] --- C
+        ```
+
+    * 
+
 
 [def]: ./0-rate_limiter.java
+[def2]: ../0x03-distributed_caches/
