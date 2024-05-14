@@ -177,7 +177,7 @@
 
 * how do the buckets communicate?
     * glad you asked...
-    *  ways: message broadcasting, 
+    * five ways: message broadcasting, gossip protocol, distributed cache, coordination service and random leader selection
     * message broadcasting &rarr; tell everyone everything. every bucket(host) knows everything about the rest. hosts may use a 3<sup>rd</sup> party service to discover each other and update themselves when a change occurs in one of the others
 
         ```mermaid
@@ -229,7 +229,23 @@
         E[coordination service] --- C
         ```
 
-    * 
+    * random leader selection &rarr; hosts choose a leader at random; may result in more than one leader
+
+        ```mermaid
+        ---
+        title: random leader selection
+        ---
+        flowchart LR
+        A[host A] --- B[host B] & C[host C] --- D[host D]
+        A --- D
+        ```
+    
+* what communication protocols will the buckets use?
+    * TCP or UDP
+    * you are certain that all data packets will not only be delivered but also that they will be delivered in order when using TCP; UDP is a different story
+    * UDP is faster than TCP
+    * UDP is faster but less accurate than TCP; make your choice
+#### integrate everything
 
 
 [def]: ./0-rate_limiter.java
