@@ -245,7 +245,47 @@
     * you are certain that all data packets will not only be delivered but also that they will be delivered in order when using TCP; UDP is a different story
     * UDP is faster than TCP
     * UDP is faster but less accurate than TCP; make your choice
-#### integrate everything
+#### integrate rate limiter w. service process
+* two ways:
+    1. rate limiter in service process inside service host
+    2. rate limiter client in service process that talks to rate limiter process. all of these are in the service host
+* rate limiter in service process inside service host
+    * rate limiter is a collection of classes that are integrated into service process
+    * faster and is not affected by inter-process call failure
+    * rate limiter process uses parent service's memory space
+
+        ```mermaid
+            ---
+            title: rate limiter in service process inside service host
+            ---
+            flowchart TD
+            subgraph service host
+                subgraph service process
+                    A[rate limiter]
+                end
+            end
+        ```
+
+* rate limiter client in service process that talks to rate limiter process
+    * there are two libraries: the rate limiter itself and the rate limiter client
+    * said client is integrated w. service process and  is responsible for inter-process calls between the rate limiter and the service process
+    * slower and prone to inter-process call failure
+    * programming language agnostic (daemon can be written in any language as long as it works as it should)
+    * rate limiter process uses its own memory space
+    * makes it easier to deal w. service team's paranoia
+
+
+        ```mermaid
+            ---
+            title: rate limiter client in service process
+            ---
+            subgraph service host
+                subgraph service process
+                    A[rate limiter client]
+                end
+                A<-->B[rate limiter process]
+            end
+        ```
 
 
 [def]: ./0-rate_limiter.java
