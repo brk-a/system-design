@@ -48,24 +48,24 @@
 
 
     ```mermaid
-    ---
-    title: request processing for single server
-    ---
-    flowchart LR
-    A(user)
-    subgraph service_host
-    A---B[client identifier builder]
-    B---C[rate limiter]
-    C---D[throttle rules cache]
-    D---E[throttle rules retreiver]
-    C-.allowed.-H[request processor]
-    C-.not allowed.-I[reject]
-    end
-    E---F[rules service]
-    F---G[(rules DB)]
-    I-.code 503 or 429.-A
-    I---J[queue]
-    I---K[drop]
+        ---
+        title: request processing for single server
+        ---
+        flowchart LR
+        A(user)
+        subgraph service_host
+            A---B[client identifier builder]
+            B---C[rate limiter]
+            C---D[throttle rules cache]
+            D---E[throttle rules retreiver]
+            C-.allowed.-H[request processor]
+            C-.not allowed.-I[reject]
+        end
+        E---F[rules service]
+        F---G[(rules DB)]
+        I-.code 503 or 429.-A
+        I---J[queue]
+        I---K[drop]
     ```
 
 * there are three return codes
@@ -81,16 +81,16 @@
 * a token is taken from the bucket every time a request is made; request is denied/rejected when #tokens in bucket = zero
 
     ```mermaid
-    ---
-    title: token bucket
-    ---
-    classDiagram
-    TokenBucket : +long maxBucketSize
-    TokenBucket : +long refillRate
-    TokenBucket : +double currentBucketSize
-    TokenBucket : +long lastRefillTimeStamp
-    TokenBucket : +allowRequest()
-    TokenBucket : +refill()
+        ---
+        title: token bucket
+        ---
+        classDiagram
+        TokenBucket : +long maxBucketSize
+        TokenBucket : +long refillRate
+        TokenBucket : +double currentBucketSize
+        TokenBucket : +long lastRefillTimeStamp
+        TokenBucket : +allowRequest()
+        TokenBucket : +refill()
     ```
 
 * how the algo works
@@ -133,16 +133,16 @@
 
 
     ```mermaid
-    ---
-    title: token buckets using OOP
-    ---
-    flowchart LR
-    A(User)--1-->B[TokenBucketRateLimiter]
-    B<--2-->C[ClientIdentifierBuilder]
-    B<--3-->D[TokenBucketCache]
-    D<--E[RetrieveRulesTask]
-    E<--F[RetrieveJobScheduler]
-    E<-->G[rules service]
+        ---
+        title: token buckets using OOP
+        ---
+        flowchart LR
+        A(User)--1-->B[TokenBucketRateLimiter]
+        B<--2-->C[ClientIdentifierBuilder]
+        B<--3-->D[TokenBucketCache]
+        D<--E[RetrieveRulesTask]
+        E<--F[RetrieveJobScheduler]
+        E<-->G[rules service]
     ```
 
 #### distributed approach
@@ -166,13 +166,13 @@
     - there is a vulnerability: the system may process more than four requests because consensus among buckets takes time
 
     ```mermaid
-    ---
-    title: simple/naive distributed approach
-    ---
-    flowchart TD
-    A[load balancer]---B[bucket 1]
-    A---C[bucket 2]
-    A---D[bucket 3]
+        ---
+        title: simple/naive distributed approach
+        ---
+        flowchart TD
+        A[load balancer]---B[bucket 1]
+        A---C[bucket 2]
+        A---D[bucket 3]
     ```
 
 * how do the buckets communicate?
@@ -219,25 +219,25 @@
     * coordination service &rarr; chooses a leader; said leader coordinates the rest of the hosts
 
         ```mermaid
-        ---
-        title: coordination service
-        ---
-        flowchart TD
-        A[host A] --- C[host C]
-        B[host B] --- C
-        D[host D] --- C
-        E[coordination service] --- C
+            ---
+            title: coordination service
+            ---
+            flowchart TD
+            A[host A] --- C[host C]
+            B[host B] --- C
+            D[host D] --- C
+            E[coordination service] --- C
         ```
 
     * random leader selection &rarr; hosts choose a leader at random; may result in more than one leader
 
         ```mermaid
-        ---
-        title: random leader selection
-        ---
-        flowchart LR
-        A[host A] --- B[host B] & C[host C] --- D[host D]
-        A --- D
+            ---
+            title: random leader selection
+            ---
+            flowchart LR
+            A[host A] --- B[host B] & C[host C] --- D[host D]
+            A --- D
         ```
     
 * what communication protocols will the buckets use?
@@ -286,6 +286,55 @@
                 A<-->B[rate limiter process]
             end
         ```
+
+#### FAQs
+* my service is popular proper; millions of users at peak time. does this mean millions of buckets are stored in memory?
+    * in theory, yes; it is possible that millions of buckets will be created in memory
+    * in practice, not likely. say millions of clients send requests at the same time (the same second); we will create millions of buckets in mem. the bucket will be maintained as long as the client that caused it to be made keeps sending requests within the allowed time interval, *k*. it is unlikely that said client will make said requests
+* daemon (the rate limiter) may fail so that hosts in cluster fail to see said daemon. what now?
+    * the host w. a failed daemon leaves the group and throttles requests w/o talking to other hosts in the cluster
+    * nothing ugly happens; simply, less requests, in total, will be throttled
+* what happens during a network partition when several hosts in a cluster cannot broadcast messages to the rest of the group?
+    * *nada*; hosts in a network carry on as though nothing happened
+    * hosts which cannot broadcast messages leave the group and throttle requests w/o talking to other hosts in the cluster
+    * nothing ugly happens; simply, less requests, in total, will be throttled
+* will configuration rules not be a nightmare to manage?
+    * matter of fact, no
+    * we may need to introduce a self-service tool that allows service teams to create, update and delete rules as needed
+    * synchronisation will be implemented in the token buckets and token bucket cache; of course, we can use atomic references or concurrent hash maps, for example, to implement thread safety
+    * caveat: synchronisation may become a bottleneck for services with unusually large requests per second rate
+#### what should clients of our service do with throttled calls?
+* glad you asked...
+    * clients may
+        1. queue and re-send said requests later
+        2. re-try throttled requests in a *smart way* (exponential back-off and jitter)
+            * wtf is exponential back-off and jitter?
+                * good question...
+                * idea is this: try requests at exponentially increasing waiting intervals. you realise that the intervals could get infinitely large and the requests would never end (because the interval never ends); this is where *back-off* comes in. back-off is a ceiling; a max value above which the interval cannot be. *jitter*, simply, adds randomness to the intervals to spread out the load; w/o jitter, the back-off algo will re-try at the same interval
+                * TLDR: re-try while waiting randomly longer with each re-try until such a time as the waiting time excceds a set maximum
+
+                ```mermaid
+                    ---
+                    title: big picture
+                    ---
+                    flowchart LR
+                    subgraph service host
+                        subgraph service
+                            A[rate limiter client] --- B[client identifier builder]
+                        end
+                        subgraph rate limiter
+                        C[rate limiter] --- D[throttle rules cache]
+                        D --- E[throttle rules retriever]
+                        end
+                        C --- A
+                        C --- I[message broadcaster]
+                    end
+                    F[rules service] --- G[(rules DB)]
+                    F --- E
+                    F --- G[rules console]
+                    G --- H((service owner))
+                    I --- J[other hosts in cluster]
+                ```
 
 
 [def]: ./0-rate_limiter.java
