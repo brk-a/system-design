@@ -29,6 +29,32 @@
 * available &rarr; withstands hardware and/or network failure
 * performant &rarr; single digit latency for main ops
 * durable &rarr; data, once submitted, is not lost
+### high-level arch
+* client P uses a virtual IP (VIP) to communicate w. client C
+* VIP is a symbolic hostname e.g. mywebservice.domain.com; it resolves to a load balancer system
+* load balancer routes P's request across a number of servers. P's request is forwarded to a FE web service
+* FE web service is responsible for initial request processing e.g. validation, authentication etc. the queue's metadata e.g. creation date, time, owner etc are stored in a DB. said DB is hidden behind some fa&#199;ade, a metadata service
+* BE web service is responsible for message processing and persistence
+
+    ```mermaid
+        ---
+        title: high-level arch
+        ---
+        flowchart LR
+        A((P))--send-->B[VIP]
+        B---C[load balancer]
+        C---D[front end]
+        D---E[metadata service]
+        E---F[(metadata)]
+        D---G[back end]
+        G---D
+        F---E
+        E---D
+        D---C
+        C---B
+        B--receive-->H((C))
+    ```
+
 ### approach
 * 
 
