@@ -37,9 +37,9 @@
 * BE web service is responsible for message processing and persistence
 
     ```mermaid
-        ---
-        title: high-level arch
-        ---
+    ---
+    title: high-level arch
+    ---
         flowchart LR
         A((P))--send-->B[VIP]
         B---C[load balancer]
