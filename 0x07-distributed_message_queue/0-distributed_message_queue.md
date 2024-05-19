@@ -79,9 +79,9 @@
     ---
         flowchart LR
         A((P))---B[distributedmessagequeue.domain.com]
-        B--VIP 1-C[load balancer 1]
-        B--VIP 2-D[load balancer 2]
-        B--VIP N-E[load balancer N]
+        B-VIP 1--C[load balancer 1]
+        B-VIP 2--D[load balancer 2]
+        B-VIP N--E[load balancer N]
         C---F[frontendhost1.domain.com]
         C---G[frontendhost2.domain.com]
         D---H[frontendhost3.domain.com]
