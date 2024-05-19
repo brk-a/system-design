@@ -55,8 +55,41 @@
         B--receive-->H((C))
     ```
 
-### approach
-* 
+### in depth
+#### VIP and load balancer
+* load balancer allows the system to have high throughput and availability
+    * client makes a request using the VIP
+    * VIP resolves to a load balancer in the cluster of load balancers
+    * load balancer directs the request to one of the FE hosts in the cluster of FE hosts
+* what happens when load balancer goes down?
+    * good question; it appears, at first, that the load balancer is a single point of failure
+    * it is simple, actually: primary and secondary nodes
+    * primary nodes accepts connections and serve requests; secondary nodes monitors the primary nodes
+    * if, for whatever reason, a primary node is unable to accept connections, a secondary node takes over immediately
+* what happens when the limits w.r.t. #requests and #bytes that a load balancer can process are reached?
+    * this is a scale problem
+    * solution: multiple VIPs aka multiple VIP partitioning
+    * assign multiple records *A* records to the DNS for the VIP service
+    * requests, therefore, are partitioned across several load balancers
+    * spread the load balancers across several data centres to improve availability and performance
 
+    ```mermaid
+        ---
+        title: VIP(s) and load balancer(s)
+        ---
+        flowchart LR
+        A((P))---B[distributedmessagequeue.domain.com]
+        B--VIP 1-C[load balancer 1]
+        B--VIP 2-D[load balancer 2]
+        B--VIP N-E[load balancer N]
+        C---F[frontendhost1.domain.com]
+        C---G[frontendhost2.domain.com]
+        D---H[frontendhost3.domain.com]
+        D---I[frontendhost4.domain.com]
+        E---J[frontendhostN-1.domain.com]
+        E---K[frontendhostN.domain.com]
+    ```
+
+#### FE system
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
