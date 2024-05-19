@@ -74,9 +74,9 @@
     * spread the load balancers across several data centres to improve availability and performance
 
     ```mermaid
-        ---
-        title: VIP(s) and load balancer(s)
-        ---
+    ---
+    title: VIP(s) and load balancer(s)
+    ---
         flowchart LR
         A((P))---B[distributedmessagequeue.domain.com]
         B--VIP 1-C[load balancer 1]
@@ -90,6 +90,6 @@
         E---K[frontendhostN.domain.com]
     ```
 
-#### FE system
+#### FE service
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
