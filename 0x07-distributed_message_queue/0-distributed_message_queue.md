@@ -91,5 +91,46 @@
     ```
 
 #### FE service
+* a lightweight web service
+* has stateless service deployed across several data centres
+* responsible for the following
+    - request validation
+        * require that all required params are present
+        * data falls w/i the constraints set (is message size smaller than X size? etc)
+    - authentication/authorisation
+        * authentication: make sure that a user/service is who/what it says it is
+        * in this case: make sure that P is registered in the system (does P's id match the one in the DB? etc) 
+        * authorisation: make sure that a user/service is allowed to perform the action it wants to perform
+        * in this case: make sure that P is, indeed, allowed to make requests to the FE service (does P have read/write/execute etc access to the FE service?)
+    - TLS (SSL) termination
+        * TLS termination: decrypt a request and pass on the unencrypted result to another service
+        * in this case: decrypt requests from Ps and pass the unencrypted result to the BE service
+        * said termination is not directly handled by the FE service; a TLS HTTP proxy that runs as a process on the same host does that
+        * also, SSL on the load balancer is expensive, therefore, it is implemented on the FE service
+    - server-side encryption
+        * messages are encrypted as soon as the FE service receives them
+        * messages are stored in encrypted format; FE only decrypts messages when they are sent to C
+    - caching
+        * stores copies of the sorure data
+        * reduces load to BE service, increases overall throughput availability and decreases latency
+        * stores metadata about the most actively used queues
+        * stores identity information to save calls to the auth service
+    - rate limiting(throttling)
+        * rate limiting: capping the number of requests a client can make to the server per unit interval of time
+        * in this case: capping the number of requests P makes to the FE service per unit interval of time
+        * protects web service from being overwhelmed by requests (malicious or otherwise)
+        * leaky bucket algorithm is a popular implementation of rate limiting
+    - request dispatching
+        * responsible for all activities associated with sending requests to BE services (client management, response processing, resource isolation, etc)
+        * bulkhead pattern helps isolate elements of an application into pools such that if one fails the others carry on
+        * circuit breaker pattern prevents an application from repeatedly trying to execute an operation that is likely to fail
+    - request deduplication
+        * may occur when a response from a successful `sendMessage()` request fails to reach a client
+        * lesser an issue for *at-least-once* delivery semantics; a bigger issue for *exactly-once* and *at-most-once*
+        * use caching to store previously-seen request IDs
+    - usage data collection
+        * gather real-time info that can be used for audit and billing
+#### metadata service
+*
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
