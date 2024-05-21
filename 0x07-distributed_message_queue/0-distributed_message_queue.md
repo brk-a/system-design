@@ -52,7 +52,7 @@
         E---D
         D---C
         C---B
-        B--receive-->H((C))
+        H((C))<--receive--B
     ```
 
 ### in depth
@@ -79,9 +79,9 @@
     ---
         flowchart LR
         A((P))---B[distributedmessagequeue.domain.com]
-        B-VIP 1--C[load balancer 1]
-        B-VIP 2--D[load balancer 2]
-        B-VIP N--E[load balancer N]
+        B--VIP 1---C[load balancer 1]
+        B--VIP 2---D[load balancer 2]
+        B--VIP N---E[load balancer N]
         C---F[frontendhost1.domain.com]
         C---G[frontendhost2.domain.com]
         D---H[frontendhost3.domain.com]
@@ -131,6 +131,73 @@
     - usage data collection
         * gather real-time info that can be used for audit and billing
 #### metadata service
-*
+* stores info about queues
+* info about a queue is captured and stored when said queue is created
+* metadata service is, simply, a caching layer for the FE; has a persistent storage
+* supports many reads and relatively little writes
+* strong consistency storage is preferred but not required
+##### organising cache clusters: store the whole dataset in cluster nodes
+* cache is relatively small
+* FE host calls, at random, a metadata service host; does not matter which one because each has a copy of the whole data set
+* possible to place a load balancer between the FE and metadata services because
+    - the FE does not care which service it connects to
+    - the metadata services have a copy of the whole data set
+
+    ```mermaid
+    ---
+    title: store the whole dataset in cluster nodes
+    ---
+        flowchart TD
+        A[FE]---B[metadata service]
+        A---C[metadata service]
+        A---D[metadata service]
+        B--"A-Za-z0-9"---E[(A-Za-z0-9)]
+        F--"A-Za-z0-9"---E
+        G--"A-Za-z0-9"---E
+    ```
+
+##### organising cache clusters: shard the dataset (FE is aware of shards)
+* partition the data set into smaller chunks called *shards*
+* the premise is this: data set is too large to to be placed into the memory of a single host
+* each shard is stored in a separate node in the cluster
+* FE host calls, using an algorithm, a metadata service host that contains the data set it requires
+* metadata service hosts represent a consistent hashing ring
+
+    ```mermaid
+    ---
+    title: shard the dataset (FE is aware of shards)
+    ---
+        flowchart TD
+        A[FE]---B[metadata service]
+        A---C[metadata service]
+        A---D[metadata service]
+        B--"A-Ha-h0-9"---E[(A-Za-z0-9)]
+        F--"I-Qi-q0-9"---E
+        G--"R-Zr-z0-9"---E
+    ```
+
+
+##### organising cache clusters: shard the dataset (FE is unaware of shards)
+* partition the data set into smaller chunks called *shards*
+* the premise is this: data set is too large to to be placed into the memory of a single host
+* each shard is stored in a separate node in the cluster
+* each metadata service is aware of the existence of other shards and can redirect a request to a different service
+* FE host calls, at random, a metadata service host; said service may or may not contain the data the FE requires
+* if metadata service does not have the data, it calls the service that contains the data set the FE requires
+* metadata service hosts represent a consistent hashing ring
+
+    ```mermaid
+    ---
+    title: shard the dataset (FE is unaware of shards)
+    ---
+        flowchart TD
+        A[FE]---B[metadata service]
+        A---C[metadata service]
+        A---D[metadata service]
+        B--"A-Ha-h0-9"---E[(A-Za-z0-9)]
+        F--"I-Qi-q0-9"---E
+        G--"R-Zr-z0-9"---E
+    ```
+
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
