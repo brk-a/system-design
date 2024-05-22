@@ -199,5 +199,32 @@
         G--"R-Zr-z0-9"---E
     ```
 
+#### back end service
+* we must figure out
+    * where and how to store messages
+        - DB, perhaps? not a good idea because our system requires high throughput and fast, efficient read/write ops
+        - memory, maybe? yes, that works, however, it must be a combination of a RAM and local disk of a BE host
+        - file system? yes, this works too...
+    * how to replicate data
+        - replicate w/i a group of hosts, that is, send copies of messages to other hosts so that said messages can survive host hardware and/or software failures, if any
+    * how FE selects a BE host to dend data to and where the FE knows where to retrieve the data from
+        - leverage metadata service, perhaps? great idea 💡
+* how it works
+    * `sendMessage()`request comes to FE
+    * FE consults metadata service on what BE host to send data to
+    * data is sent to a selected BE host and replicated
+    * `receiveMessage()` request comes to FE
+    * FE consults metadata service on what BE host has the data `recvMessage()` requires
+
+    ```mermaid
+    ---
+    title: BE service high-level arch
+    ---
+        flowchart LR
+        A((P))--sendMessage-->B[FE]
+        B-.-C[metadata service]
+        B-->D[BE host]
+        E((C))--receiveMessage-->B
+    ```
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
