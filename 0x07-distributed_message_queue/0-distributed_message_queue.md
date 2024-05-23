@@ -214,11 +214,11 @@
     * FE consults metadata service on what BE host to send data to
     * data is sent to a selected BE host and replicated
     * `receiveMessage()` request comes to FE
-    * FE consults metadata service on what BE host has the data `recvMessage()` requires
+    * FE consults metadata service on what BE host has the data `receiveMessage()` requires
 
     ```mermaid
     ---
-    title: BE service high-level arch
+    title: BE service high-level relationship to the rest of the system
     ---
         flowchart LR
         A((P))--sendMessage-->B[FE]
@@ -226,5 +226,44 @@
         B-->D[BE host]
         E((C))--receiveMessage-->B
     ```
+
+* how BE service will be configured
+    1. leader-follower configuration &rarr; each BE instance/host is considered a leader of a particular set of queues
+        - leader &rarr; all requests from a particular queue (say, `sendMessage()` or `receiveMessage()`) go to this leader instance
+        - `sendMessage()` request comes to FE  service; say queue id is *q1*
+        - FE service calls metadata service to identify a leader BE instance for said queue, say, instance B
+        - FE service sends message to instance B
+        - instance B replicates message to instances in its cluster
+        - `receiveMessage()` request comes to FE service
+        - FE service calls metadata service to identify a leader BE instance for said queue, say, instance B
+        - FE service retrieves message to instance B; the message may be retrieved from any instance in the cluster, however, instance B, and instance B only, communicates with FE service
+        - instance B cleans up the the original message and replicas
+
+        ```mermaid
+        ---
+        title: BE service leader-follwer configuration
+        ---
+            flowchart LR
+            A((P))--sendMessage-->B[FE service]
+            B---C[metadata service]
+            B---D[BE instance B]
+            E[BE instance A]~~~D
+            F[BE instance C]~~~D
+            D---G[FE service]
+            G---H[metadata service]
+            G<--receiveMessage--I((C))
+        ```
+
+        - how do we elect the the leader? eea...sy! an *in-cluster manager*
+            * in-cluster manager e.g. ZooKeeper is responsible for  maintaining a mapping between queues, leaders and followers
+
+                |queue ID|leader host|follower hosts|
+                |:---:|:---:|:---:|
+                |q1|B|A, C|
+                |q2|D|B, E|
+
+            * in-cluster manager must be reliable, scalable and performant
+            * creating one is quite the task; can we avoid building one? maybe... it requires that all instances be equal. we've seen that before, haven't we?
+    2. small cluster of independent hosts   
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
