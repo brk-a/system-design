@@ -52,7 +52,7 @@
         E---D
         D---C
         C---B
-        H((C))<--receive--B
+        H((C))--receive-->B
     ```
 
 ### in depth
@@ -151,9 +151,10 @@
         A[FE]---B[metadata service]
         A---C[metadata service]
         A---D[metadata service]
-        B--"A-Za-z0-9"---E[(A-Za-z0-9)]
-        F--"A-Za-z0-9"---E
-        G--"A-Za-z0-9"---E
+        B--"A-Za-z0-9"---E[node 1]
+        F[node 2]--"A-Za-z0-9"---G[(A-Za-z0-9)]
+        H[node N]--"A-Za-z0-9"---G
+        E---G
     ```
 
 ##### organising cache clusters: shard the dataset (FE is aware of shards)
@@ -171,9 +172,10 @@
         A[FE]---B[metadata service]
         A---C[metadata service]
         A---D[metadata service]
-        B--"A-Ha-h0-9"---E[(A-Za-z0-9)]
-        F--"I-Qi-q0-9"---E
-        G--"R-Zr-z0-9"---E
+        B--"A-Ha-h0-9"---E[shard 1]
+        F[shard 2]--"I-Qi-q0-9"---G[(A-Za-z0-9)]
+        H[shard N]--"R-Zr-z0-9"---E
+        E---G
     ```
 
 
@@ -194,9 +196,15 @@
         A[FE]---B[metadata service]
         A---C[metadata service]
         A---D[metadata service]
-        B--"A-Ha-h0-9"---E[(A-Za-z0-9)]
-        F--"I-Qi-q0-9"---E
-        G--"R-Zr-z0-9"---E
+        B--"A-Ha-h0-9"---E[shard 1]
+        C--"I-Qi-q0-9"---F[shard 2]
+        D--"R-Zr-z0-9"---G[shard 3]
+        B-.-C
+        C-.-D
+        B-.-D
+        E---H[(A-Za-z0-9)]
+        F---H
+        G---H
     ```
 
 #### back end service
@@ -251,7 +259,7 @@
             F[BE instance C]~~~D
             D---G[FE service]
             G---H[metadata service]
-            G<--receiveMessage--I((C))
+            I((C))--receiveMessage-->G
         ```
 
         - how do we elect the the leader? eea...sy! an *in-cluster manager*
@@ -264,6 +272,52 @@
 
             * in-cluster manager must be reliable, scalable and performant
             * creating one is quite the task; can we avoid building one? maybe... it requires that all instances be equal. we've seen that before, haven't we?
-    2. small cluster of independent hosts   
+    2. small cluster of independent hosts &rarr; two ar three machines distributed across several data centres
+        - `sendMessage()` request from P's FE service is forwarded to the closest, most available node of BE cluster
+        - FE uses metadata service to determine which BE node the request will be sent to
+        - BE instance is responsible for replication of data across all nodes in cluster
+        - `receiveMessage()` request from FE is forwarded to the closest, most available node of BE cluster; metadata service is responsible for identifying said node
+        - FE retrieves the message from the BE node and forwards it to C
+        - selected node cleans up original message and replicas
+
+            ```mermaid
+            ---
+            title: BE service small cluster of independent hosts configuration
+            ---
+                flowchart LR
+                A((P))--sendMessage-->B[FE service]
+                B---C[metadata service]
+                B---D[BE node B]
+                E[BE instance A]~~~D
+                F[BE instance C]~~~D
+                D---G[FE service]
+                G---H[metadata service]
+                G<--receiveMessage--I((C))
+                C---J[out-cluster manager]
+                H---J
+            ```
+
+        - we no longer require a component to elect a leader, however, we require a queue-to-cluster assignment manager
+        - enter the out-cluster manager: it will maintain a mapping  between queues and clusters
+
+            |queue ID|cluster ID|
+            |:---:|:---:|
+            |q1|c1|
+            |q2|c2|
+            |...|...|
+            |qn|cn|
+
+        * in-cluster assignment manager vs out-cluster assignment manager
+
+            |paramater of comparison|in-cluster|out-cluster|
+            |:---:|:---:|:---:|
+            |what it manages|manages queue assignment w/i a cluster|manages queue assignment among clusters|
+            |responsibility|maintains a list of hosts in the cluster|maintains a list of clusters|
+            |system health|monitors "heartbeats" from hosts|monitors health of each cluster|
+            |system failures|deals w. leader-follower failures|deals w. overheated clusters|
+            |requests exceed capacity|splits queue between cluster nodes|splits queue between clusters|
+
+        * use any or both as your project requires
+
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
