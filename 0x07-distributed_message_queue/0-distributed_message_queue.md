@@ -318,6 +318,32 @@
             |requests exceed capacity|splits queue between cluster nodes|splits queue between clusters|
 
         * use any or both as your project requires
+### other considerations
+* queue creation and deletion
+    - queue can be auto-created when the first message is received by the FE service
+    - alternative: have an API create a queue
+    - the API way is superiror; it allows us more control over the queue creation parameters
+    - delete queue operation is not as easy as it appears: do not expose `deleteQueue()` API method via  a pubblic REST endpoint
+    - instead, expose it through a command line utility so that only experienced admin users may call it
+* message deletion
+    - option 1: fail to delete a message immediately after it was consumed
+        - in this case, consumers are responsible for whatever they have consumed already
+        - we must maintain a list or other sort of ordering of the messages in the queue and keep track of the offset, the position of a message in a queue. messages can then be deleted several days later by, say, a cron job
+        - this is what Apache Kafka implements
+    - option 2: fail to delete  a message immediately after it was consumed but mark it invisible so other consumers cannot retrieve it
+        - consumer that retrieved the message must call `deleteMessage()` API method to delete the message from BE host
+        - messages that are not explicitly deleted by consumers are visible to other consumers; they could be ddelivered or processed again and again
+        - this is what Amazaon SQS implements
+* message replication
+    - option 1: synchronous replication
+        - BE host waits until data is replicated to other hosts before returning a `success` status response to the producer client that sent the message
+        - more durable than asychronous replication
+        - has a higher latency cost for `sendMessage()` that asynchronous replication
+    - option 2: asynchronous replication
+        - BE host does not wait until data is replicated to other hosts before returning a `success` status; it returns said response as soon as the message is stored in a single BE host. the message is replicated to other  hosts afterwards
+        - more performant than synchronous replication
+        - does not guarantee that message will persist across replicas
+* message delivery
 
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
