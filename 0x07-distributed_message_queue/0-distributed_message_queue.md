@@ -332,7 +332,7 @@
         - this is what Apache Kafka implements
     - option 2: fail to delete  a message immediately after it was consumed but mark it invisible so other consumers cannot retrieve it
         - consumer that retrieved the message must call `deleteMessage()` API method to delete the message from BE host
-        - messages that are not explicitly deleted by consumers are visible to other consumers; they could be ddelivered or processed again and again
+        - messages that are not explicitly deleted by consumers are visible to other consumers; they could be delivered or processed again and again
         - this is what Amazaon SQS implements
 * message replication
     - option 1: synchronous replication
@@ -344,6 +344,17 @@
         - more performant than synchronous replication
         - does not guarantee that message will persist across replicas
 * message delivery
+    - three main message delivery guarantees
+        - at most once &rarr; message is lost and may never re-delivered
+        - at least once &rarr; message is never lost and may be re-delivered
+        - exactly once &rarr; message is delivered once and only once
+    - why do we need three? will anyone want anything other than the last one?
+        - good questions...
+        - they may not think they want the rest, however, they are not thinking; that is the problem
+        - it is quite difficult to achieve exactly-once delivery in practice
+        - there are many potential points of failure in a distributed message queue: P may fail to deliver or deliver multiple times, data replication may fail, Cs may fail to retrieve or process the message etc
+        - most distributed message queue implementations support at-least-once delivery because it provides a balance between durability, availability and performance
+* push vs pull
 
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
