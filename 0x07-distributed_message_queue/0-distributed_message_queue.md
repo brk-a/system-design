@@ -355,6 +355,49 @@
         - there are many potential points of failure in a distributed message queue: P may fail to deliver or deliver multiple times, data replication may fail, Cs may fail to retrieve or process the message etc
         - most distributed message queue implementations support at-least-once delivery because it provides a balance between durability, availability and performance
 * push vs pull
+    - pull model &rarr; C sends `receiveMessage()` requests constantly; FE sends messages to C when they are available
+        - easier to implement than push
+        - from C's perspective, the process is inefficient; more work than in the push model
+    - push model &rarr; C does not bombard FE w. `receiveMessage()` requests; C is, instead notified by FE as soon a s a message arrives at the queue. C then sends a `receiveMessage()` request
+        - more difficult to implement than pull
+        - from C's perspective, the process is efficient; `receiveMessage()` requests are sent only when necessary
+* FIFO
+    - First In First Out
+    - oldest message in the queue is processed first
+    - difficult to mainatain strict order in a distributed system; how do we solve this?
+        - eea...sy! avoid the problem altogether
+        - many implementations of distributed message queues do not guarantee a strict ordering of messages
+        - those that do have limitations around throughput because a queue cannot be fast while processing many validation and coordination routines to guarantee a strict ordering of messages
+* security
+    - P's messages must be delivered securely to C
+    - P &rarr; FE &rarr; BE &rarr; DB &rarr; BE &rarr; FE &rarr; C
+    - encrypt messages in transit using SSL when using HTTPS
+    - encrypt messages when storing then in BE hosts or DB
+* monitoring
+    - check components/microservices: FE, metadata and BE regularly to determine their health
+    - track P's and C's experiences by providing them a way of tracking their queues
+    - each service must emit metrics and write log data
+    - said metrics and data are visualised on a dashboard; each service has its own dashboard
+    - set up alerts for each metric in each service
+    - give P and C the ability to set up alerts and dashboards
+### final architecture
+
+    ```mermaid
+    ---
+    title: distributed message queue
+    ---
+        flowchart LR
+        A((P))--sendMessage-->B[VIP service]
+        B-->C[load balancer]
+        C-->D[FE service 1]
+        D-.-E[metadata service]
+        E-.-F[(matadata DB)]
+        D-->G[BE service]
+        H[FE service N]-->G
+        C-->H
+        B-->C
+        C-->I((C))
+    ```
 
 
 [def]: https://en.wikipedia.org/wiki/Message_queue
