@@ -31,3 +31,34 @@
 * available &rarr; survives hardware/network failures; no single point of failure
 * performant &rarr; keeps end-to-end latency as low as possible
 * durable &rarr; messages must not be lost; each S must get each message at least once
+### high-level architecture
+* all requests from P will go through a load balancer for performance reasons
+* a FE service will perform initial request processing
+* there will be a DB to store info about topics and subscriptions
+* said DB will be behind a metadata service for two reasons
+    - seperation of concerns principle &rarr; provide access to DB using a well-defined interface
+    - said service acts a a cache layer between DB and other services; we want to minimise the #hits to the DB (as few hits with every message published as possible)
+* messages are stored in the temporary storage service for, well, a short time
+    - the time in question depends on subscribers: seconds if all Ss are  available and message is sent successfully to them, several days at most otherwise
+* Ss get messages through the sender service
+* sender service gets messages from temporary storage
+* we, simply, need to store all the info generated when `createTopic` and `subscribe` are called
+
+    ```mermaid
+    ---
+    title: notification system high level architecture
+    ---
+        flowchart LR
+        A((P))--publish-->B[load balancer]
+        B-->C[FE service]
+        C-.-D[metadata sevice]
+        D-.-E[( metadata DB)]
+        C-->F[temporary storage service]
+        F-->G[sender service]
+        G-.-C
+        G-->H((S #1))
+        G-->I((S #2))
+        G-->I((S #N))
+    ```
+
+* 
