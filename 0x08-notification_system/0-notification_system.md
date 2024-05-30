@@ -61,4 +61,44 @@
         G-->I((S #N))
     ```
 
-* 
+### approach
+#### FE service
+* stateless, lightweight web service
+* deployed across several data centres
+* responsible for
+    - request validation
+    - authentication and authorisation
+    - TLS (SSL) termination
+    - server-side encryption
+    - caching
+    - rate limiting
+    - request dispatching
+    - request deduplication
+    - usage data collection
+* FE service has
+    - reverse proxy that picks up requests when they land on the host
+        - reverse proxy is a lightweight server that is responsible for
+            - SSL termination &rarr; HTTPS requests are decrypted and passed further in unencrypted form; responses are encrypted when being  sent to client
+            - compression &rarr; e.g. with `gzip`; proxy compresses responses when being sent to client
+    - FE web service that is responsible for
+        - calling the metadata service to get info about the topic
+            - may implement a local cache to minimise calls to metadata service
+        - logging information about service health, exceptions raised in the course of operation, metrics(#requests, #faults, call latency data etc), audit logs (e.g. who made which request to what API when) 
+
+    ```mermaid
+    ---
+    title: FE service host
+    ---
+        flowchart LR
+        A((P))~~~I[]
+        subgraph FE-service-host
+        A--request-->B[reverse proxy]
+        B--->C[FE service]
+        C---D[cache]
+        C---E[(local disk)]
+        E---F[service logs agent]
+        E---G[metrics agent]
+        E---H[audit logs agent]
+        end
+        J[metadata service]---C
+    ```
