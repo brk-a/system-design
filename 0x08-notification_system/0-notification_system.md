@@ -101,4 +101,74 @@
         E---H[audit logs agent]
         end
         J[metadata service]---C
+        K[service logs service]---F
+        L[metrics service]---G
+        M[audit logs service]---H
     ```
+
+#### metadata service
+* a distribted caching layer between the FE and a persistent storage
+* supports many reads and few writes
+* info about topics is divided among hosts in a cluster
+* cluster represents a consistent hashing ring; eac FE host calculates a hash, say, MD5 or RSA, using a key, say, a topic name and topic owner identifier
+* FE host picks a metadata host based on the hash value
+
+    ```mermaid
+    ---
+    title: metadata service host consistent hashing ring arrangement
+    ---
+        flowchart LR
+        A[A-Ga-g]---B[H-Nh-n]
+        B---C[O-To-t]
+        C---D[U-Zu-z]
+        D---A
+    ```
+
+* how do FE hosts know which metadata service host to call?
+    * good question...
+    * two options...
+    * one: central registry
+        - introduce a component/service that is responsible for coordination
+        - knows everything about all metadata service hosts
+        - each of the said hosts sends a *"pulse"* regularly
+        - each FE host asks the coordination service how to get to the metadata service host that contains the data required by the request
+        - coordination service becomes aware of changes and re-maps hash key ranges every  time we add metadata hosts to the metadata service
+
+        ```mermaid
+        ---
+        title: metadata service host coordination service arrangement
+        ---
+            flowchart LR
+            A[A-Ga-g]---B[H-Nh-n]
+            B---C[O-To-t]
+            C---D[U-Zu-z]
+            D---A
+            E[coordination service]---A
+            E---B
+            E---C
+            E---D
+            F[FE host]---E
+            F-.-A
+        ```
+
+    * two: gossip protocol
+        - no coordinator service
+        - every FE host is able to obtain info about all metadata service hosts
+        - evry FE host is notified when metadata service hosts are added to or removed from the cluster
+        - gossip protocol is based on the way epidemics spread: computers implement this with a form of *"random peer selection"*
+        - w/i a given frquency, a machine picks another machine at random and shares data with it
+
+        ```mermaid
+        ---
+        title: metadata service host gossip protocol arrangement
+        ---
+            flowchart LR
+            A[A-Ga-g]---B[H-Nh-n]
+            B---C[O-To-t]
+            C---D[U-Zu-z]
+            D---A
+            E[FE host]---A
+            E---B
+            E---C
+            E---D
+        ```
