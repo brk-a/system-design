@@ -172,3 +172,26 @@
             E---C
             E---D
         ```
+
+#### temporary storage service
+* fast, highly-available and scalable web service
+* must guarantee data persistence
+    - has to store messages for several days just in case S is unavailable
+* several options
+    - databases
+        - no need for ACID-compliant transactions, complex dynamic queries or analytics and/or warehousing
+        - we require a DB that is highly available, scales easily for reads and/or writes and tolerates network partitions
+        - a NoSQL DB is best placed for this use case
+        - messages have a limited size, say, &lt; 1Mb, therefore, we do not need a document store
+        - no specific relationship between messages, therefore, no need for graph-type DBs
+        - that leads to one of two NoSQL DB types: key-value and column
+        - specific examples: Apache Cassandra, Amazon DynamoDB
+    - in-memory storage
+        - it better possess persistence
+        - example: Redis
+    - message queues
+        - they fulfill all the requirements of the temporary storage service
+        - more info [here][def]
+        - example: Apache Kafka, Amazon SQS
+
+[def]: ../0x07-distributed_message_queue/0-distributed_message_queue.md
