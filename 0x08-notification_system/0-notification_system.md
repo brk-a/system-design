@@ -193,5 +193,31 @@
         - they fulfill all the requirements of the temporary storage service
         - more info [here][def]
         - example: Apache Kafka, Amazon SQS
+#### sender service
+* uses the *fan-out* method
+* sender component retrieves message from temporary storage service using an in-built message receiver service
+    - said service uses a pool of threads; each thread reads data from temporary storage service
+    - naive approach: always start a predetermined number of message retrieval threads. some threads may be idle when the #messages &gt; #threads. conversely, the only way to scale will be to add sender hosts to the cluster
+    - better approach: use the #threads required: no more and no less. keep track of #messages and #threads; adjust #threads accordingly. solves the scaling problem and also solves the problem where sender service bombards the temporary storage service with too many requests
+    - use counting semaphore to restrict the #read message threads
+        - a semaphore contains a set of permits; a thread must acquire a permit before it retrieves the next message. it must return said permit to semaphore to allow another thread to pick up the permit
+        - #permits can be adjusted dynamically to match the load in the temporary storage service or achieve a desired read rate
+* message reciever service talks to the metadata service through the message-sender client service to obtain info about S
+* message-sender client sends the messages and metadata to the task-creator service. task-creator service creates independent tasks; each task is responsible for sending a message to one S and nothing else. this way, we deliver messages in parallel and a single bad/failed delivery does not affect the rest
+* task creator service send the tasks tasks to the task-executor service; this service, well, executes the tasks
+
+    ```mermaid
+    ---
+    title: sender service
+    ---
+        flowchart LR
+        subgraph sender-service
+        A[message retriever]-->B[MS client]
+        B-->C[task creator]
+        C-->D[task executor]
+        end
+        E[temporary storage]---A
+        F[metadata service]-.-B
+    ```
 
 [def]: ../0x07-distributed_message_queue/0-distributed_message_queue.md
