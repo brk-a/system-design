@@ -205,6 +205,11 @@
 * message reciever service talks to the metadata service through the message-sender client service to obtain info about S
 * message-sender client sends the messages and metadata to the task-creator service. task-creator service creates independent tasks; each task is responsible for sending a message to one S and nothing else. this way, we deliver messages in parallel and a single bad/failed delivery does not affect the rest
 * task creator service send the tasks tasks to the task-executor service; this service, well, executes the tasks
+    - in java, for example, the task-creator and task-executor services could be instances of the `ThreadPoolExecutor` class
+    - use semaphores to track #threads in the pool
+    - say we have enough threads to process the newly created tasks; we, simply, submit all tasks for processing
+    - say we do not have enough threads to process said newly created tasks; we, simply, postpone or stop the excess tasks from being processed and return the message(s) to the temporary storage service. a different sender service may pick up the message(s) so that the process begins again
+    - tasks may delegate actual delivery of message to other microservices e.g. SMS microservice
 
     ```mermaid
     ---
@@ -215,9 +220,29 @@
         A[message retriever]-->B[MS client]
         B-->C[task creator]
         C-->D[task executor]
+        D-->G((task 1))
+        D-->H((task 2))
+        D-->I((task N))
         end
         E[temporary storage]---A
         F[metadata service]-.-B
+        J["`S<sub>1</sub>`"]--call HTTPS endpoint---G
+        K["`S<sub>2</sub>`"]--send email or SMS---H
+        L["`S<sub>3</sub>`"]--mobile push---I
     ```
+
+#### what else may come up
+* did we just build a solution for spammers?
+    - yes and no
+    - yes, spammers can use this solution to, well, spam
+    - no, our system will register Ss. all Ss must confirm that they agree to get nootifications from our service using an email or HTTPS endpoint
+* how do you handle duplicate messages?
+    - FE service catches any/all duplicate messages sent by publishers
+    - Ss are responsible for avoiding duplicate messages that occur when there are re-tries caused by network failure or Ss' internal failures
+* if re-tries cause duplicate messages, why re-try?
+    - re-tries are one of the ways that guarantee that messages will be delivered at least once
+    - we have the option to send undelivered messages to a different S or store the undelivered messages in a system that Ss monitor; both options are inefficient for the goal at hand
+    - 
+
 
 [def]: ../0x07-distributed_message_queue/0-distributed_message_queue.md
