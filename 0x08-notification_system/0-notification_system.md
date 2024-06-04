@@ -242,7 +242,13 @@
 * if re-tries cause duplicate messages, why re-try?
     - re-tries are one of the ways that guarantee that messages will be delivered at least once
     - we have the option to send undelivered messages to a different S or store the undelivered messages in a system that Ss monitor; both options are inefficient for the goal at hand
-    - 
+    - would be great if our notification system provides a way for subscribers to define re-trying behaviour (re-try policy e.g. what to do when message cannpt be delivered after re-try limit is reached)
+* does our system guarantee message order e.g FIFO, LIFO etc?
+    - no. our system does not guarantee message order
+    - say messages are processed w. some attribute that preserves the order e.g. sequence number or timestamps: delivery of messages does not honour this because tasks are executed in any order
+    - slower sender hosts may fall behind or message delivery attemp may fail meaning re-tries will arrive in an unpredictable order
+* how do we implement security?
+    -
 
 
 [def]: ../0x07-distributed_message_queue/0-distributed_message_queue.md
