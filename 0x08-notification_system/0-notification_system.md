@@ -78,7 +78,7 @@
 * FE service has
     - reverse proxy that picks up requests when they land on the host
         - reverse proxy is a lightweight server that is responsible for
-            - SSL termination &rarr; HTTPS requests are decrypted and passed further in unencrypted form; responses are encrypted when being  sent to client
+            - SSL termination &rarr; HTTP requests are decrypted and passed further in unencrypted form; responses are encrypted when being  sent to client
             - compression &rarr; e.g. with `gzip`; proxy compresses responses when being sent to client
     - FE web service that is responsible for
         - calling the metadata service to get info about the topic
@@ -248,7 +248,34 @@
     - say messages are processed w. some attribute that preserves the order e.g. sequence number or timestamps: delivery of messages does not honour this because tasks are executed in any order
     - slower sender hosts may fall behind or message delivery attemp may fail meaning re-tries will arrive in an unpredictable order
 * how do we implement security?
-    -
+    - simply CIA, AAA and more
+    - make sure that
+        - only authenticated publishers can publish messages
+        - only registered Ss can receive the messages they subscribe to and never to anyone else
+        - messages in transit over HTTP are encrypted using SSL
+        - messages in storage are encrypted
+* how do we monitor the system?
+    - set up a monitoring service for
+        - each microservice
+        - end-to-end UX/CX
+    - set up/ integrate a system that allows customers to track the state of their topics (e.g. #messages awaiting delivery, #messages that have not been delivered etc)
+### the system
 
+```mermaid
+---
+title: notification system
+---
+    flowchart LR
+    A((P))---B[load balancer]
+    B---C[FE service]
+    C-.-D[metadata service]
+    D-.-E[(DB)]
+    C---F[temporary storage service]
+    F---G[sender service]
+    D-.-G
+    G---H((S1))
+    G---I((S2))
+    G---J[Sn]
+```
 
 [def]: ../0x07-distributed_message_queue/0-distributed_message_queue.md
