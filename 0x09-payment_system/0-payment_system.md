@@ -65,7 +65,6 @@
 
     ```
 ### system components
-* 
 
     ```mermaid
     ---
@@ -99,5 +98,22 @@
         F-.-P[(DB)]
     ```
 
+### asynchronous communication
+* sync vs async
+    - synchronous comms &rarr; a client/service sends a request to a server/service and waits for a response before sending another
+    - asynchronous comms &rarr; a client/service sends a request to a server but does not wait for a response before sending another
+* facts on the ground
+    - hardware and/or software can fail at any time
+    - networks can fail or be slow
+    - many moving parts: services, agents, servers, DBs etc
+* sync comms is not tolerant to failure or latency
+    - also does not isolate failure; the system, overall, becomes less available
+    - exposes system to risk of cascading failure
+    - does not provide loose coupling of components
+* use sync comms only when necessary
+* async comms is suited for loosely coupled components, traffic spikes
+    - allows services e.g. Apache Kafka to queue requests and send them to the server(s) at the proper rates
+    - allows server to scale with the #requests in the background
+* async comms solves the fault tolerance and latency constraints
 
 [def]: https://developer.safaricom.co.ke/
