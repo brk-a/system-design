@@ -115,5 +115,65 @@
     - allows services e.g. Apache Kafka to queue requests and send them to the server(s) at the proper rates
     - allows server to scale with the #requests in the background
 * async comms solves the fault tolerance and latency constraints
+    - best  for payment processing, fraud detection and analytics
+### reliability
+
+    ```mermaid
+        flowchart TD
+        A[reliability]---B[business level]
+        A---C[technical level]
+        B---D[reconciliation]
+        B---D[payment status]
+        B---E[handle delays]
+        B---F[...]
+        C---G[redundancy]
+        C---H[persistent queues]
+        C---I[retry strategies]
+        C---J[idempotency]
+        C---K[fault tolerance]
+        C---L[...]
+    ```
+
+#### types of failure
+* network and server failures
+* poison pill errors
+    - inbound mesage cannot be processed/consumed
+* functional bugs
+    - no technical errors, however, results are invalid
+
+    ```mermaid
+        flowchart TD
+        A[failures]---B[system failures]
+        A---C[poison pill errors]
+        A---D[functional bugs]
+    ```
+
+#### guaranteeing transaction completion
+* use a messaging queue e.g. Apache Kafka to
+    - make sure that messages are not lost in the network
+    - guarantee said messages are received assuming that services may break at random
+* message is stored on message queue until a success response from the receiver service/server is received
+* receiver service/server stores message in DB before sending te success response to message queue
+* this way, message is stored on at least one disk; first guarantee done ::white tick::
+* message queue may resend messages regularly or the receiver service/server may poll the message queue regularly
+* this way, receiver service/server will always get the messages; second guarantee done ::white tick::
+    
+    ```mermaid
+    ---
+    title: "message queue to guarantee transaction comletion"
+    ---
+        flowchart LR
+        A[]-->|payment update| B[payment service]
+        B-->|create event| C[apache kafka]
+        C-->|consume message| D[wallet service]
+        C-->|consume message| E[ledger service]
+        D-.-|offset: 1| F[(DB)]
+        E-.-|offset: 1| G[(DB)]
+        D-.-|success| C
+        E-.-|success| C
+    ```
+
+#### transient failures
+* 
 
 [def]: https://developer.safaricom.co.ke/
