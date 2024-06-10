@@ -174,6 +174,24 @@
     ```
 
 #### transient failures
-* 
+* we may need to get info from other services in the course of making a payment/transaction
+    - e.g. result s of a DB query
+* a message queue is not efficient
+    - payment requests may fail because of network issues etc that have nothing to do with either service
+* how do we treat transient errors?
+    - glad you asked...
+    - three ways to start with
+        1. retry strategies
+        2. timeouts
+        3. fallbacks
+* retry strategies &rarr; payment service makes the pay request regularly until it receives a response from the, say, risk-check service
+    - works when network errors are the cause of the failure
+    - retry parameters
+        - #retries (n) &rarr; you want to limit the number of retries to, say, five per IP address per day, else, you expose the system to attacks like [this one][def2]
+        - interval (t) &rarr; strategies
+            1. immediate (t&rarr;0) &rarr; retry immediately after failure; almost certaily won't work because it is almost certain that the problem has not been resolved in such a short time
+* timeouts &rarr;
+* fallbacks &rarr;
 
 [def]: https://developer.safaricom.co.ke/
+[def2]: https://github.com/brk-a/LearnWebAppPentesting/blob/main/0x0B-learn_pentesting/0x00-api_sec_fundamentals/0-real_world_api_breaches.md#what-the-researcher-did-3
