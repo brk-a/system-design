@@ -189,8 +189,16 @@
     - retry parameters
         - #retries (n) &rarr; you want to limit the number of retries to, say, five per IP address per day, else, you expose the system to attacks like [this one][def2]
         - interval (t) &rarr; strategies
-            1. immediate (t&rarr;0) &rarr; retry immediately after failure; almost certaily won't work because it is almost certain that the problem has not been resolved in such a short time
+            1. immediate (t&rarr;0) &rarr; retry immediately after failure; almost certainly won't work because it is almost certain that the problem has not been resolved in such a short time
+            2. fixed interval(t=*k* where *k* is a constant) &rarr; retry every *k* long until a response is received
+            3. incremental intervals (t<sub>i</sub>=*t<sub>i-1</sub> + k* where *k*&gt;0) &rarr; retry every *t* long. the next *t* is always longer than the last 
+                - alternative: t=*f(t)* where *f(t)* is a linear function (f(t) = a + bt)
+            4. exponential back-off intervals (t=f(t)) where *f(t)* = ab<sup>t</sup>, t&gt;1 a&gt;0 and b&ne;1
+                - the function f(t) = 2<sup>t</sup> is used almost everywhere
+                - retry after 2<sup>t</sup> time where t = 1, 2, 3 ... until a response is received
+            5. random interval (t=f(t)) where *f(t)* follows any probability distribution, preferably, poisson
 * timeouts &rarr;
+    - 
 * fallbacks &rarr;
 
 [def]: https://developer.safaricom.co.ke/
