@@ -197,9 +197,19 @@
                 - the function f(t) = 2<sup>t</sup> is used almost everywhere
                 - retry after 2<sup>t</sup> time where t = 1, 2, 3 ... until a response is received
             5. random interval (t=f(t)) where *f(t)* follows any probability distribution, preferably, poisson
-* timeouts &rarr;
-    - 
-* fallbacks &rarr;
+* timeouts &rarr; idea is to avoid unbounded waiting times for a response
+    - *min(t)* where 0&lt;t&lt;n, n&lt;&infin;
+    - operation is aborted when time to respond is too high; request is treated as failed
+    -  say a user sees that the order was not processed. said user cannot know whether
+        1. the payment was successful but the response was timed out
+        2. the request is still being processed in the payment system (request timed out while payment was in progress)
+        3. the request did indeed reach the payment system
+    - user may decide to restart the order; that means the user may pay twice for the same order and such other undesirable outcomes
+    - how big shold we set the timeout?
+        - depends on each endpoint; set the upper bound  of each timeout to allow laggard requests to arrive and the lower bound to time out responses that may never arrive
+* fallbacks &rarr; enable a service to execute/process requests even when requests to another service/server  it depends on are failing
+    - say the fraud check service is not available for whatever reason. payment service, which depends on the response from the fraud check service has two options
+        1. 
 
 [def]: https://developer.safaricom.co.ke/
 [def2]: https://github.com/brk-a/LearnWebAppPentesting/blob/main/0x0B-learn_pentesting/0x00-api_sec_fundamentals/0-real_world_api_breaches.md#what-the-researcher-did-3
