@@ -68,7 +68,7 @@
 
     ```mermaid
     ---
-    payment system components
+    title: payment system components
     ---
         flowchart LR
         A((customer))--payment event-->B[payment gateway]
@@ -119,6 +119,9 @@
 ### reliability
 
     ```mermaid
+    ---
+    title: "reliability" 
+    ---
         flowchart TD
         A[reliability]---B[business level]
         A---C[technical level]
@@ -142,6 +145,9 @@
     - no technical errors, however, results are invalid
 
     ```mermaid
+    ---
+    title: failures
+    ---
         flowchart TD
         A[failures]---B[system failures]
         A---C[poison pill errors]
@@ -160,10 +166,10 @@
     
     ```mermaid
     ---
-    title: "message queue to guarantee transaction comletion"
+    title: "message queue to guarantee transaction completion"
     ---
         flowchart LR
-        A[]-->|payment update| B[payment service]
+        A-->|payment update| B[payment service]
         B-->|create event| C[apache kafka]
         C-->|consume message| D[wallet service]
         C-->|consume message| E[ledger service]
@@ -205,11 +211,58 @@
         2. the request is still being processed in the payment system (request timed out while payment was in progress)
         3. the request did indeed reach the payment system
     - user may decide to restart the order; that means the user may pay twice for the same order and such other undesirable outcomes
-    - how big shold we set the timeout?
+    - how big should we set the timeout?
         - depends on each endpoint; set the upper bound  of each timeout to allow laggard requests to arrive and the lower bound to time out responses that may never arrive
 * fallbacks &rarr; enable a service to execute/process requests even when requests to another service/server  it depends on are failing
     - say the fraud check service is not available for whatever reason. payment service, which depends on the response from the fraud check service has two options
-        1. 
+        1. abort the whole request computation (in a similar manner to atomicity principle in ACID)
+        2. take a fallback rule in memory and carry on
+            - this is a compromise between risk to and availability of the system
+
+            ```C
+                ...
+                double threshold = X;
+                if (payment<threshold){
+                    // carry on
+                } else {
+                    // abort abort abort
+                }
+                ...
+            ```
+
+
+            ```mermaid
+            ---
+            title: fallback
+            ---
+                flowchart LR
+                A((user))-->B[website]
+                B-->C[payment service]
+                C--xD[fraud check service]
+                C-->|fallback rule| C
+            ```
+
+#### persistent failures
+* say the fraud check service from the example above is unavailable for a significant amount of time, say, two minutes; what now?
+    1. abort the request assuming failure is acceptable
+    2. save messages in a dedicated queue to debug later when dealing with poison pill errors
+        - this pattern is called the *dead letter queue* method
+    3. save messages in a dedicated, persistent queue when dealing with a broken service; requests will be retried when the service is available
+
+        ```mermaid
+        ---
+        title: fallback
+        ---
+            flowchart LR
+            A((user))-->B[website]
+            B-->C[payment service]
+            C--xD[fraud check service]
+            C-->|dead letter queue| E[dedicated message queue]
+            C-->|normal flow queue| F[persistent message queue]
+        ```
+
+### idempotency
+* 
 
 [def]: https://developer.safaricom.co.ke/
 [def2]: https://github.com/brk-a/LearnWebAppPentesting/blob/main/0x0B-learn_pentesting/0x00-api_sec_fundamentals/0-real_world_api_breaches.md#what-the-researcher-did-3
