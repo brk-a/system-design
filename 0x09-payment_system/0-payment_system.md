@@ -303,6 +303,27 @@
     ```
 
 ### distributed systems
+* allows the system to scale
+#### redundancy
+* achieved using replication
+* idea is to eliminate single points of failure
+* copies of data and/or processes are stored on multiple DBs, therefore, the loss of one does not affect the availability, reliablility or other performance of the system
+
+    ||read consistency levels|write consistency levels|
+    |:---:|:---:|:---:|
+    |1.|read one replica|commit to one replica|
+    |2.|read quorum|commit to quorum|
+    |3.|read all replicas|commit to all replicas|
+
+    > $quorum = \left( \sum_{i=1}^n r_i / 2 \right) + 1$
+    > where r is a replication factor
+
+#### load balancing
+* request traffic is directed to available nodes in such a way that a single not is not overwhelmed by requests
+#### fault torelance
+* idea is to have the system working even when an instance of a component fails
+#### scalability
+* idea is to spin or take down instances of services and/or DBs as the load increases or decreases respectively
 
 [def]: https://developer.safaricom.co.ke/
 [def2]: https://github.com/brk-a/LearnWebAppPentesting/blob/main/0x0B-learn_pentesting/0x00-api_sec_fundamentals/0-real_world_api_breaches.md#what-the-researcher-did-3
