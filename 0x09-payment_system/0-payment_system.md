@@ -324,6 +324,27 @@
 * idea is to have the system working even when an instance of a component fails
 #### scalability
 * idea is to spin or take down instances of services and/or DBs as the load increases or decreases respectively
+### security
+#### data-at-rest
+* encrypt the data prior to storing it and/or encrypt the storage device itself
+* use SHA, RSA etc
+#### data-in-transit
+* encrypt the data at multiple levels (assuming OSI model)
+    * implement VPNs at network level
+    * implement TLS at higher levels (session and presentation levels especially)
+        - TLS, not SSL; the latter was deprecated in 2011
+    * implement HTTPS at application level
+#### access control
+* define implement and enforce the roles + rights of a user (authorisation) and MFA to establish the identity of said user (authentication)
+#### software vulnerabilities
+* update software, libraries and OSs regularly
+* apply the latest security patches to any 3<sup>rd</sup> party libraries, software etc
+#### back-ups
+* back up data regularly, preferably in an air-gapped DB
+#### "common sense" security procedures
+* use unique, uncommon passwords
+    - example: *Crunchy creamy Cookie candy Cupcake* . long, easy to remember, difficult to decrypt
+* 
 
 [def]: https://developer.safaricom.co.ke/
 [def2]: https://github.com/brk-a/LearnWebAppPentesting/blob/main/0x0B-learn_pentesting/0x00-api_sec_fundamentals/0-real_world_api_breaches.md#what-the-researcher-did-3
