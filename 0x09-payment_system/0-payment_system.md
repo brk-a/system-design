@@ -342,7 +342,7 @@
 #### back-ups
 * back up data regularly, preferably in an air-gapped DB
 #### "common sense" security procedures
-* use unique, uncommon passwords
+* use unique, uncommon passwords; passphrases are best
     - example: *Crunchy creamy Cookie candy Cupcake* . long, easy to remember, difficult to decrypt
 * 
 
