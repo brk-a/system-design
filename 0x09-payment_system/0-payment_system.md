@@ -344,7 +344,15 @@
 #### "common sense" security procedures
 * use unique, uncommon passwords; passphrases are best
     - example: *Crunchy creamy Cookie candy Cupcake* . long, easy to remember, difficult to decrypt
-* 
+### monitoring data integrity
+* idea is to protect business data from known and/or unknown threats
+* check if any changes have been made to vulnerable data
+* assess the files of the DBs and file systems and generate a cryptographic check-sum as a baseline
+    - re-calculate said check-sums regularly and compare with the baseline
+    - if re-calculated &ne; baseline: *wagwaan, Frankie; we 'ave a problem*
+    - this method allows us to detect hard-to-find threats e.g.  malware w/i OSs
+    - this process can be resource-intensive; use on files and/or data that are more vulnerable to cyber attacks so that the resources freed can be invested efficiently
+    - vulnerable data/files: user credentials, privileges, identities, encryption key stores, OS files, config files, app files etc
 
 [def]: https://developer.safaricom.co.ke/
 [def2]: https://github.com/brk-a/LearnWebAppPentesting/blob/main/0x0B-learn_pentesting/0x00-api_sec_fundamentals/0-real_world_api_breaches.md#what-the-researcher-did-3
