@@ -46,10 +46,9 @@
         }
 
         class StockDetails{
-            +String stockID
+            +String stockID PK
             +Object metadata
         }
-    
     ```
 
 ##### APIs
@@ -59,7 +58,7 @@
 * `getOrderStatus(orderID)`
 ##### storage estimates
 * order requests
-    * 100B/transaction * 60000 transactions/s * 86400 s/day * 365 days pa = &approx; 100TB pa
+    * 100B/transaction * 60000 transactions/s * 86400 s/day * 365 days pa &approx; 100TB pa
     * &approx; 500TB in five years
 * stock details
     * 100B/stock * 1000 stocks = 1 lakh B
@@ -78,6 +77,17 @@
     ```
 
 ### high level w. a little more detail
+* TLDR; the order request DB is read-and-write-heavy. it does not require asset properties transaction guarantees. it must be easy to scale, therefore, a NoSQL DB is best placed for the job
+* order requests are in the hundreds of TBs
+    - we need a DB that supports sharding/partitioning inherently
+    - a NoSQL DB may be a great choice if we do not require asset properties transaction guarantees
+    - the order requests DB simply stores orders; no financial transactions, therefore, no asset properties transaction guarantees are required
+    - conclusion: said DB can be a NoSQL DB
+* the NSE service stores orders in said NoSQL DB and the `status` property on the `order` object is set to *in progress*
+    - said DB is dependent on the `buy` and `sell` APIs
+    - users check the status of their orders by indirectly querying the DB
+    - said order-status-seeking requests are checking the `orderID`, therefore, the order request DB can be partitioned by `orderID` which happens to be PK of the DB
+* writes to the DB are buy and/or sell orders; reads to the DB are order status requests
 
 
     ```mermaid
