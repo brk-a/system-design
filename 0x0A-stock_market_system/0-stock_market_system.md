@@ -128,3 +128,18 @@
         end
         Q-->other-services
     ```
+
+### matching service
+* clearly cannot be done synchronously
+    - enter two queues: `buy` and `sell`
+    - `buy` handles, well, buy orders; `sell` handles... you already know
+* NSE service places `buy` and sell orders in the respective queues
+    - there is a queue for each stock in both the `buy` and `sell` queues
+    - the NSE, as at Wed, 19 Jun, 2024 has 61 stocks listed; that means 124 queues total
+        * two main queues: buy and sell
+        * 61 queues under `buy`
+        * 61 queues under `sell`
+* matcher service polls both queues
+    - idea is to match, say, $EQTY `sell` orders with $EQTY `buy` orders
+    - matcher polls $EQTY `sell` and $EQTY `buy` order queues then matches `buy` and `sell` orders
+    - 
