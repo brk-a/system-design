@@ -133,7 +133,7 @@
 * clearly cannot be done synchronously
     - enter two queues: `buy` and `sell`
     - `buy` handles, well, buy orders; `sell` handles... you already know
-* NSE service places `buy` and sell orders in the respective queues
+* NSE service validates and places `buy` and sell orders in the respective queues
     - there is a queue for each stock in both the `buy` and `sell` queues
     - the NSE, as at Wed, 19 Jun, 2024 has 61 stocks listed; that means 124 queues total
         * two main queues: buy and sell
@@ -142,4 +142,14 @@
 * matcher service polls both queues
     - idea is to match, say, $EQTY `sell` orders with $EQTY `buy` orders
     - matcher polls $EQTY `sell` and $EQTY `buy` order queues then matches `buy` and `sell` orders
-    - 
+    - Amazon SQS may help the matcher service consume messages from the queues; a message, once polled, cannot be seen by other consumers
+    - we require at least two matcher nodes for each stock per main queue for reliablility and availability reasons
+    - matcher service matches `buy` and `sell` prices
+        * matches *buy* price X to *sell* price X &plusmn; *y* where *y* is a small, allowable price spread
+            * example: match *buy* price 100 to *sell* price 100 &plusmn; 1.5 (98.5 to 101.5)
+        * matches *sell* price X to *buy* price X or more
+            * example: match *buy* price 100 to *sell* price 100 or more
+    - if there are matches, handle matches, else, push messages back to respective queues; repeat process until CoB
+    - orders that do not find a prospective match by CoB will be marked *expired*; they are stale, therefore, are dropped
+    - in other words, the queues are empty at the beginning of each trading/business day
+
