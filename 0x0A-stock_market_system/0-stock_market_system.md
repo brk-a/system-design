@@ -24,10 +24,10 @@
 
     ```mermaid
     ---
-    title: Db schema
+    title: DB schema
     ---
         classDiagram
-        class OrderRequest {
+        class OrderRequest{
             +String orderID PK
             +String customerID
             +String stockID
@@ -36,7 +36,6 @@
             +String orderType
             +String status
         }
-
         class MatchedOrders{
             +String matchID PK
             +String buyOrderID
@@ -44,7 +43,6 @@
             +int quantity
             +int salePrice
         }
-
         class StockDetails{
             +String stockID PK
             +Object metadata
@@ -112,8 +110,8 @@
         M[BAT]
         N[etc]
         end
-        C-->|buy| buy-queues
-        C-->|sell| sell-queues
+        D-->|buy| buy-queues
+        D-->|sell| sell-queues
         buy-queues --> O[matcher service]
         O-->P[queue]
         P-->Q[executor service]
@@ -152,4 +150,14 @@
     - if there are matches, handle matches, else, push messages back to respective queues; repeat process until CoB
     - orders that do not find a prospective match by CoB will be marked *expired*; they are stale, therefore, are dropped
     - in other words, the queues are empty at the beginning of each trading/business day
+* how will partial matches be handled?
+    - say there is a `buy` order for 100 units of $EQTY and a `sell` order for 120 units of $EQTY and that the price spreads match. clearly, the `sell` order can fulfill the `buy` one
+    - what happens to the 20 units left over?
+    - eea...sy! create a new `sell` order object containing 20 units and place it on the queue
+    - conversely, create a `buy` order object containing 20 units and place it on the queue when the `buy` order is greater than the `sell` order by 20 units
+### executor service
+* `sell` and `buy` orders have been matched in whole or in part; what now?
+* matched orders are place in a queue to be consumed by the executor service
+* execution is a distributed transaction ( a database transaction where two or more network hosts are involved. usually, hosts provide transactional resources while a transaction manager creates and manages a global transaction that encompasses all operations against such resources)
+* 
 
