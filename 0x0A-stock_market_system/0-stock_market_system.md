@@ -113,6 +113,7 @@
         D-->|buy| buy-queues
         D-->|sell| sell-queues
         buy-queues --> O[matcher service]
+        sell-queues --> O
         O-->P[queue]
         P-->Q[executor service]
         Q-->R[deduct money service]
@@ -158,6 +159,10 @@
 ### executor service
 * `sell` and `buy` orders have been matched in whole or in part; what now?
 * matched orders are place in a queue to be consumed by the executor service
-* execution is a distributed transaction ( a database transaction where two or more network hosts are involved. usually, hosts provide transactional resources while a transaction manager creates and manages a global transaction that encompasses all operations against such resources)
-* 
-
+* execution is a distributed transaction (a database transaction where two or more network hosts are involved. usually, hosts provide transactional resources while a transaction manager creates and manages a global transaction that encompasses all operations against such resources)
+* what the executor sercice does
+    1. create a transaction
+    2. call the `deductMoney` service to, well, deduct the amount from the seller's account
+    3. mark the matched orders as, well, `matched` in another DB
+    4. update the order request DB with fulfillment status (partially, fully, pending, stale, rejected etc)
+    5. publish a message to, say, a Kafka/SNS queue for consumption by auxiliary services (notifications, analytics, ticker update etc)
