@@ -20,6 +20,8 @@
     - we may even implement a gateway
 * spotify's web server talks to a DB
      - a read-and-write-heavy system
+     - we have at least three types of data: raw audio, audio metadata and user data
+     - perhaps a DB for each... 
 
     ```mermaid
     ---
@@ -28,6 +30,32 @@
         flowchart LR
         A((user))-->B[load balancer]
         B-->C[spotify web server]
-        C-->D[(DB)]
+        C-->D[(raw audio)]
+        C-->E[(metadata: songs, artists, genres ... )]
+        C-->F[(user data)]
     ```
 
+* why multiple DBs?
+    1. data types/formats are different
+        - raw audio, for example, is an immutable blob (you will, almost certainly, never need to modify the file); the raw audio DB is read-heavy (Amazon S3 lends itself well)
+        - metadata may or may not be immutable (Amazon RDS lends itself well)
+
+            ```mermaid
+            ---
+            title: audio metadata object
+            ---
+                classDiagram
+                class Song{
+                    +String songID
+                    +String songURL
+                    +String artist
+                    +String genre
+                    +String albumCoverURL
+                    +String audioLink
+                }
+            ```
+
+        - user data is mutable (user changes their username/password etc). Also, this data is subject to various regulations (DPA, GDPR etc); you want to keep it seperate (Amazon RDS lends itself well)
+    2. space requirements are different
+        - recall 0.5 PB for raw audio etc
+    3. read and write ferequency: the raw audio DB is, almost certainly, read-heavy;  the rest are, more or less, read-and-write-heavy
