@@ -38,7 +38,7 @@
 * why multiple DBs?
     1. data types/formats are different
         - raw audio, for example, is an immutable blob (you will, almost certainly, never need to modify the file); the raw audio DB is read-heavy (Amazon S3 lends itself well)
-        - metadata may or may not be immutable (Amazon RDS lends itself well)
+        - metadata may or may not be immutable (Amazon RDS lends itself well); also this DB needs to be relational
 
             ```mermaid
             ---
@@ -59,3 +59,18 @@
     2. space requirements are different
         - recall 0.5 PB for raw audio etc
     3. read and write ferequency: the raw audio DB is, almost certainly, read-heavy;  the rest are, more or less, read-and-write-heavy
+### finding music
+* user may type in the song's name, artist or genre; we need to return the result that matches the song search query closest
+* user data is sent as a `GET` request to the spotify web service
+    * the request is  translated to a query that the metadata DB understands
+    * DB returns the metadata of the search results to the UI
+    * notice how we do not touch the raw audio DB
+* user clicks on the song they want to listen to
+    * the click becomes a request from the user to the spotify web server
+    * the the request is translated to a query metadata DB understands
+    * metadata DB returns the `audioLinks` property to the web server
+    * we can, finally, query the raw audio DB: the web server  queries the raw audio DB
+    * raw audio DB returns the audio to the spotify web server which, in turn, returns it to the user
+        - we could return the audio chunk by chunk; a web socket is required to achieve this
+        - a more efficient method: return the whole audio file (it is 5 MB, after all; the web server can take that); no web sockets or such other expensive operations
+        - the second method eliminates the lag between the DB and web server (the streaming does not begin until the audio file is in the web server)
