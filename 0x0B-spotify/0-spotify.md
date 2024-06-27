@@ -74,3 +74,43 @@
         - we could return the audio chunk by chunk; a web socket is required to achieve this
         - a more efficient method: return the whole audio file (it is 5 MB, after all; the web server can take that); no web sockets or such other expensive operations
         - the second method eliminates the lag between the DB and web server (the streaming does not begin until the audio file is in the web server)
+### bottlenecks
+##### most played/viral songs
+* TL:DR: the songs most listened to can be fetched from a cache instead of the DB. we use a CDN to achieve this. said CDN is told by the web server what songs to fetch from the DB. AWS CloudFront or equivalent works
+* pareto principle: majority of effects come from minority of causes
+    - in this case, majority of calls to raw audio DB are for a minority of the songs
+    - let the minority proportion be, say, 10% (i.e. 10 million songs)
+    - newly released hit/viral songs are included in the 20%
+    - let the majority proportion be, say, 50% (i.e. 500 million users)
+* we have half a billion requests to play 10 million songs (we could apply the principle recursively on this sample as many times as we want. think the 1% of the 1% of the 1% etc)
+    - 250 million users request for two million  songs
+    - 125 million users request for 400,000 songs
+    - etc
+* the requests
+    - could overwhelm the DBs. also, the same song will be loaded to majority of the web servers
+    * reach/exceed the bandwidth constraints
+* enter the CDN (content delivery network)
+    - it is a cache of sorts
+    - it reduces the amount of load to the back end
+    - typically close to the user from the perspective of number of hops/network connections
+    - said CDN will cache/store the most commonly streamed audio files
+    - of, course, it requires a direct connection to the DB to be able to update itself
+    - said cache can be accessed by users instead of the DB
+    - the data/metadata required to update the CDn will be on the web server
+
+    ```mermaid
+    ---
+    title: spotify w. CDN high-level
+    ---
+        flowchart LR
+        A((user))-->B[load balancer]
+        B-->C[spotify web server]
+        C-->D[(raw audio)]
+        C-->E[(metadata: songs, artists, genres ... )]
+        C-->F[(user data)]
+        C-->|updates| G[CDN]
+        G-->|fetches from| D
+        G-->|streams to| A
+    ```
+
+* user will be able to see the latest/most played/viral songs right after turning the app on (and connection to the internet, of course) because the web server will have already updated the CDn and the CDN will update the UI when the user opens the app
