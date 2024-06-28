@@ -31,7 +31,7 @@
         A((user))-->B[load balancer]
         B-->C[spotify web server]
         C-->D[(raw audio)]
-        C-->E[(metadata: songs, artists, genres ... )]
+        C-->E[(metadata:<br/>songs,<br/>artists,<br/>genres<br/>... )]
         C-->F[(user data)]
     ```
 
@@ -106,11 +106,18 @@
         A((user))-->B[load balancer]
         B-->C[spotify web server]
         C-->D[(raw audio)]
-        C-->E[(metadata: songs, artists, genres ... )]
+        C-->E[(metadata:<br/>songs,<br/>artists,<br/>genres<br/>... )]
         C-->F[(user data)]
         C-->|updates| G[CDN]
         G-->|fetches from| D
         G-->|streams to| A
     ```
 
-* user will be able to see the latest/most played/viral songs right after turning the app on (and connection to the internet, of course) because the web server will have already updated the CDn and the CDN will update the UI when the user opens the app
+* user will be able to see the latest/most played/viral songs right after turning the app on (and connection to the internet, of course) because the web server will have already updated the CDN and said CDN will update the UI when the user opens the app
+##### optimisation
+TL;DR: implement multi-layer caching
+* web servers could have their own cache too: a shared one or one that is local to each
+    - this way, the song is loaded from the DB to the local/shared cache and uploaded to the CDN if necessary
+* a user's own memory can be used to store, say, 15 of the songs said user plays the most
+##### load balancing
+* 
