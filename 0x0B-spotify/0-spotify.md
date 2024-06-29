@@ -5,7 +5,7 @@
      - user can search for a specific song
      - the app actually get the song to the user's ears
 ### high-level metrics
-* 1 billions users
+* 1 billion users
 * 100 million songs
 * typical `.mp3` audio is &approx; 5 MB; 100 million songs * 5 MB / song = 500 TB = 0.5 PB
     - assume 3x replication; raw audio requires *c.* 1.5 PB of space
@@ -120,4 +120,10 @@ TL;DR: implement multi-layer caching
     - this way, the song is loaded from the DB to the local/shared cache and uploaded to the CDN if necessary
 * a user's own memory can be used to store, say, 15 of the songs said user plays the most
 ##### load balancing
-* 
+* consider the parameters used to determine how to apply load balancing
+    - CPU, memory, bandwidth etc
+* our system is a streaming service, therefore, bandwidth has the most weight
+* parameters specific to this system: requests outstanding, current streams
+##### replication
+* have a geo-aware strategy of data placement
+    - example: Amapiano is popular in east, west and southern Africa; the DBs there will have amapiano audio and metadata 
