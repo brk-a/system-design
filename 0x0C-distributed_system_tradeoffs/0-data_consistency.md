@@ -29,4 +29,22 @@
         - example: banking. record transactions in the ledger then make updates to the necessary entities in due course
     2. use TCP to update servers regularly
         - TCP is reliable and data is ordered
-        - update will not happen is the recipient server is down 13.07
+        - update will not happen is the recipient server is down
+        - we find ourselves with the [two generals' problem][def]
+        - we can use the leader-follower strategy to solve said problem
+            - set one server as the leader
+            - said leader read and writes to the DB
+            - the follower, simply, read from the DB
+            - all `create`, `update` and `delete` requests are implemented by the leader
+            - there will be inconsistencies whent he leader is down/out
+        - another solution: two-phase commit strategy
+            - simply an advanced  leader-follower strategy
+            - one leader, many followers
+            - leader sends a [prepared statements][def2] command/statement/request to the followers
+            - followers send an `ACK` response to the leader; said response means "yes, leader, I have received the request"
+            - leader asks followers to commit changes to mem/DB etc
+            - followers send an `ACK` response to the leader; said response means "yes, leader, I have committed the changes you sent"
+            - susceptibile to edge case limitations 18:13
+
+[def]: https://en.wikipedia.org/wiki/Two_Generals%27_Problem
+[def2]: https://en.wikipedia.org/wiki/Prepared_statement
