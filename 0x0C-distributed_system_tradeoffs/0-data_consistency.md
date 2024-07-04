@@ -40,11 +40,24 @@
         - another solution: two-phase commit strategy
             - simply an advanced  leader-follower strategy
             - one leader, many followers
-            - leader sends a [prepared statements][def2] command/statement/request to the followers
+            - leader sends a [prepared statements][def2] directive/command/statement/request to the followers
             - followers send an `ACK` response to the leader; said response means "yes, leader, I have received the request"
             - leader asks followers to commit changes to mem/DB etc
             - followers send an `ACK` response to the leader; said response means "yes, leader, I have committed the changes you sent"
-            - susceptibile to edge case limitations 18:13
+            - susceptibile to edge case limitations
+        - two-phase commit works viz:
+            - phase 1, prepare: leader sends a `BEGIN` directive to DB (directly or through a message queue e.g. Kafka). leader sends the prepared statements mentioned above to DB. DB/message queue sends an `ACK` response (the first `ACK` mentioned above) to leader
+            - phase 2, commit: leader sends a `COMMIT` directive to DB. said DB commits the transaction(s). DB/message queue sends an `ACK` response (the second `ACK` mentioned above) to leader
+            - say leader does not get the first `ACK` response. said leader considers the transaction to have failed; the leader and DB perform a `ROLLBACK`. followers do what the leader says, therefore, they will roll back too
+            - say the leader does not get the second `ACK` response. recall that TCP allows retries, therefore, the leader will retry the commit w/i the parameters of the system TCP config. the specific row being affected will be read-and-write-locked on the leader and read-locked on the followers and DB
+            - the system is now consistent but unavailable
+        - another solution: eventual consistency
+            - 25:06
+
+
+
+
+            - the transaction either succeeds or fails; no in-between: this property is called _atomicity_; it facilitates and maintains consistency of data in the system
 
 [def]: https://en.wikipedia.org/wiki/Two_Generals%27_Problem
 [def2]: https://en.wikipedia.org/wiki/Prepared_statement
