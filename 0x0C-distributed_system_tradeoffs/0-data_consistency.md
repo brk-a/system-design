@@ -52,7 +52,7 @@
             - say the leader does not get the second `ACK` response. recall that TCP allows retries, therefore, the leader will retry the commit w/i the parameters of the system TCP config. the specific row being affected will be read-and-write-locked on the leader and read-locked on the followers and DB
             - the system is now consistent but unavailable
         - another solution: eventual consistency
-            - 25:06
+            - eventual consistency implements the property of _isolation_
 
 
 
