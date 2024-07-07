@@ -54,30 +54,57 @@
         - another solution: eventual consistency
             - eventual consistency implements the property of BASE (Basically-Available, Soft-state, Eventually-consistent)
 ### strong vs eventual consistency
-* strong consistency is a consistency model used in concurrent programming (e.g., in distributed shared memory, distributed transactions etc)
+* **strong consistency** &rarr; is a consistency model used in concurrent programming (e.g., in distributed shared memory, distributed transactions etc)
     - a protocol is said to support strong consistency if:
         1. all accesses are seen by all parallel processes (or nodes, processors, etc.) in the same order (sequentially)
     - that is, only one consistent state can be observed, as opposed to weak consistency where different parallel processes (or nodes etc.) can perceive variables in different states
     - the transaction either succeeds or fails; no in-between: this property is called _atomicity_; it facilitates and maintains consistency of data in the system
     - strong consistency may implement ACID (Atomicity, Consistency, Isolation, Durability)
     - more info [here][def3]
-* eventual consistency is  a consistency model used in distributed computing to achieve high availability that informally guarantees that if no new updates are made to a given data item, eventually, all accesses to that item will return the last updated value
+
+    |pros|cons|
+    |:---:|:---:|
+    |consistency and simplified application logic|system is less available and has higher latency|
+    |guarantees consistent data view across all nodes|may require more resources for high availability and low latency|
+
+* **eventual consistency** &rarr; is  a consistency model used in distributed computing to achieve high availability that informally guarantees that if no new updates are made to a given data item, eventually, all accesses to that item will return the last updated value
     - eventual consistency, also called optimistic replication, is widely deployed in distributed systems
     - a system that has achieved eventual consistency is often said to have converged or achieved replica convergence
     - eventual consistency is a weak guarantee – most stronger models, like linearisability, are trivially eventually consistent
 * eventually-consistent services are often classified as providing BASE semantics in contrast to traditional ACID
     - in chemistry, a base is the opposite of an acid, which helps in remembering the acronym
-    - **basically-available** &rarr; reading and writing operations are available as much as possible (using all nodes of a database cluster) but might not be consistent (the write might not persist after conflicts are reconciled and the read might not get the latest write)
-    - **soft-state** &rarr; without consistency guarantees, after some amount of time, we only have some probability of knowing the state since it might not yet have converged
-    - **eventually-consistent** &rarr; if we execute some writes and then the system functions long enough, we can know the state of the data; any further reads of that data item will return the same value
+    - _basically-available_ &rarr; reading and writing operations are available as much as possible (using all nodes of a database cluster) but might not be consistent (the write might not persist after conflicts are reconciled and the read might not get the latest write)
+    - _soft-state_ &rarr; without consistency guarantees, after some amount of time, we only have some probability of knowing the state since it might not yet have converged
+    - _eventually-consistent_ &rarr; if we execute some writes and then the system functions long enough, we can know the state of the data; any further reads of that data item will return the same value
 * eventual consistency is sometimes criticised as increasing the complexity of distributed software applications. this is partly because eventual consistency is purely a liveness guarantee (reads eventually return the same value) and does not guarantee safety: an eventually consistent system can return any value before it converges
 * more info [here][def4]
+
+    |pros|cons|
+    |:---:|:---:|
+    |system is highly available even|possible temporary inconsitencies because nodes may return different values in the short term|
+    |low latency for write operations|complex conflict resolution strategy may lead to data loss in case of conflicts|
+
+* **strong eventual consistency** &rarr; guarantees that when all nodes have received the same set of updates, they will be in the same state regardless of the order in which updates were applied. this is achieved through [conflict-free replicated data][def5] types (CRDTs) or [operational transformation][def6] (OT)
+    - 
+
+    |pros|cons|
+    |:---:|:---:|
+    |high availability and low latency|applies to limited data types|
+    |convergence w/o conflict resolution|CRDTs and OTs are complex to implement|
+
 ##### why bother comparing strong and eventual consistency?
 * there is a trade-off between between performance, availability, reliability, and
     - strong consistency achieves high latency (poor performance), high reliability, neither high nor low functional correctness and an unpleasant ~~aka shit~~ UX
-    - eventual consistency achieves low latency, neither high nor low reliability, neither high nor low functional correctness and a somewhat pleasant UX 4:20
+    - eventual consistency achieves low latency, neither high nor low reliability, neither high nor low functional correctness and a somewhat pleasant UX
+* prefer strong to eventual consistency by default
+    * situations where eventual consistency is preferred:
+        - strong consistency cannot be achieved
+        - 
+* 
 
 [def]: https://en.wikipedia.org/wiki/Two_Generals%27_Problem
 [def2]: https://en.wikipedia.org/wiki/Prepared_statement
 [def3]: https://en.wikipedia.org/wiki/Strong_consistency
 [def4]: https://en.wikipedia.org/wiki/Eventual_consistency
+[def5]: https://www.baeldung.com/java-conflict-free-replicated-data-types
+[def6]: https://en.wikipedia.org/wiki/Operational_transformation
