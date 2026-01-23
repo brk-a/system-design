@@ -25,17 +25,17 @@
   - metrics: MTBF >10,000h; failure rate <0.01%
 
 ```mermaid
-graph TB
-    GD[good design] --> s[scalability<br/>horizontal/vertical]
-    GD --> M[maintainability<br/>modularity/MTTR]
-    GD --> E[efficiency<br/>Big O/utilisation]
-    GD --> R[reliability<br/>MTBF/uptime]
-    S --> SH[scale-Out: K8s]
-    S --> SV[scale-up: CPU/RAM]
-    M --> O[observability: Logs/Traces]
-    E --> BO[O(n log n)]
-    R --> Red[redundancy]
-    style GD fill:#f9f,stroke:#333,stroke-width:4px
+  graph TB
+      GD[good design] --> s[scalability<br/>horizontal/vertical]
+      GD --> M[maintainability<br/>modularity/MTTR]
+      GD --> E[efficiency<br/>Big O/utilisation]
+      GD --> R[reliability<br/>MTBF/uptime]
+      S --> SH[scale-Out: K8s]
+      S --> SV[scale-up: CPU/RAM]
+      M --> O[observability: Logs/Traces]
+      E --> BO["O(n log n)"]
+      R --> Red[redundancy]
+      style GD fill:#f9f,stroke:#333,stroke-width:4px
 ```
 
 ### 0.2. elements 
@@ -45,7 +45,7 @@ graph TB
   - Protocols: gRPC (binary, low-latency), Kafka (pub-sub)
   - Challenges: serialisation (Protobuf), bandwidth bottlenecks
 - **storing data** → the access patterns, indexing strategies and back-up solutions that influence our choice of DB
-  - sQL (ACID: PostgresQL), NosQL (CAP-tuned: MongoDB)
+  - SQL (ACID: PostgreSQL), NoSQL (CAP-tuned: MongoDB)
   - Indexing: B-trees (\( O(\log n) \)); backups: WAL + snapshots
 - **transforming data** → the ease with which raw data is turned into meaningful information
   - ETL pipelines (spark), ML inference (TensorFlow serving)
@@ -54,7 +54,7 @@ graph TB
 ```mermaid
     flowchart LR
         Raw[Raw Data] --> Move[moving<br/>gRPC/Kafka]
-        Move --> store[storing<br/>sQL/NosQL<br/>B-tree Index]
+        Move --> store[storing<br/>SQL/NoSQL<br/>B-tree Index]
         store --> Transform[transforming<br/>ETL/spark]
         Transform --> Insight[Insights]
         style Raw fill:#ff9
@@ -91,7 +91,7 @@ graph TB
 * CAP theorem states that a distributed system may only achieve any two of the aforementioned principles; never all three
 
 - **CA** → achieving consistency and availability means foregoing partition tolerance
-  - single-node/traditional RDBMs (e.g. MysQL standalone)
+  - single-node/traditional RDBMs (e.g. MySQL standalone)
 - **CP** → achieving consistency and partition tolerance means foregoing availability
   - e.g. a banking system are designed to let transactions take longer than usual to complete if necessary in order to guarantee consistency and partition tolerance (e.g. MongoDB with strong writes)
 - **AP** → achieving availability and partition tolerance means foregoing consistency
@@ -135,9 +135,9 @@ graph TB
 * PACELC refines CAP: During partitions (P), choose consistency (C) or availability (A); else latency (L) or consistency (C)
 
 - **strong**: Linearisability ( $\forall$ reads see latest write)
-  - Proto: Paxos ($ O(n) $ messages/round)
+  - Proto: Paxos ($O(n)$ messages/round)
 - **Eventual**: Monotonic reads; e.g. vector clocks
-- **Quorums**: $ W + R > N $ guarantees intersection
+- **Quorums**: $W + R > N$ guarantees intersection
 
 **Models comparison:**
 | Model | Guarantee | Overhead | Example |
@@ -147,7 +147,7 @@ graph TB
 | Causal | Happens-before | Low | Bayou |
 | Eventual | Convergence | Minimal | Riak |
 
-**Math:** Read quorum $ R $, write $ W $: Intersection if $ R + W > N $
+**Math:** Read quorum $ R $, write $ W $: Intersection if $R + W > N$
 
 ```mermaid
   sequenceDiagram
@@ -163,7 +163,7 @@ graph TB
 * networks fail: 12.9% packet loss in wild (CAIDA)
 * PT requires progress despite <50% node loss
 
-- **detection:** Phi accrual failure detector ($ \phi $-threshold)
+- **detection:** Phi accrual failure detector ($\phi$-threshold)
 - **handling:** 
   - split-brain resolution via STONITH (Shoot The Other Node In The Head)
   - quorum: $\lfloor \frac{N}{2} \rfloor + 1$
@@ -182,6 +182,5 @@ graph TB
 
 > **takeaway:** PACELC (P/A then L/C) for nuanced trade-offs; benchmark with Chaos Engineering (e.g. Netflix Chaos Monkey)
 
-13:22
 
 </div>
